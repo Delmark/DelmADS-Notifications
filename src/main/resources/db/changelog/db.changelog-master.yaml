@@ -1,1 +1,4 @@
 databaseChangeLog:
+  - includeAll:
+      path: "./mvp_release"
+      relativeToChangelogFile: true

@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="ru.delmark.dads.notifications.data.repository.ChatDAO">
+
+
+
+    <select id="chatExists" resultType="boolean">
+        SELECT EXISTS (
+            SELECT
+                chat_id,
+                user_id
+            FROM user_chats
+            WHERE chat_id = #{id}
+        )
+    </select>
+
+    <select id="getChatIdsForTopicNotificationSend" resultType="java.lang.Long">
+        SELECT DISTINCT
+            c.chat_id
+        FROM user_chats c
+        JOIN public.bot_user bu on c.user_id = bu.id
+        JOIN public.notification_subscriptions ns on bu.id = ns.user_id
+        JOIN public.notification_topic nt on nt.name = ns.topic_name
+        WHERE ns.topic_name = #{topicName} AND bu.access_level >= nt.min_access_level
+    </select>
+
+    <insert id="insertChat">
+        INSERT INTO user_chats (chat_id, user_id)
+        VALUES (#{chatId}, #{userId})
+        ON CONFLICT DO NOTHING
+    </insert>
+</mapper>

@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="ru.delmark.dads.notifications.data.repository.NotificationSubscriptionDAO">
+
+    <select id="findUserSubscriptions"
+            resultType="ru.delmark.dads.notifications.data.model.NotificationSubscription">
+        SELECT
+            user_id,
+            topic_name,
+            created_at
+        FROM notification_subscriptions
+        WHERE user_id = #{userId}
+    </select>
+
+    <insert id="subscribe">
+        INSERT INTO notification_subscriptions (user_id, topic_name)
+        VALUES (#{userId}, #{topicName})
+        ON CONFLICT (user_id, topic_name) DO NOTHING
+    </insert>
+
+    <delete id="unsubscribe">
+        DELETE FROM notification_subscriptions
+        WHERE topic_name = #{topicName} AND user_id = #{userId}
+    </delete>
+</mapper>

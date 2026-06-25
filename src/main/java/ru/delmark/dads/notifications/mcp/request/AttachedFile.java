@@ -7,30 +7,25 @@ import org.springframework.ai.mcp.annotation.McpToolParam;
 import tools.jackson.databind.PropertyNamingStrategies;
 import tools.jackson.databind.annotation.JsonNaming;
 
-import java.util.List;
-
-
 @Data
 @JsonNaming(PropertyNamingStrategies.SnakeCaseStrategy.class)
 @FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
-public class MessageNotificationRequest implements McpRequest {
-
+public class AttachedFile {
     @McpToolParam(
-            description = "Required. Notification message that will be sent to Telegram",
+            description = "Required. File ID (Telegram ID/Local Absolute Filepath)",
             required = true
     )
-    String message;
+    String fileId;
 
     @McpToolParam(
-            description = "Required. Notification topic, can be obtained by" +
-                          " mcp tool 'get_available_notification_topic'",
+            description = "Required. File source, if file was uploaded to server:" +
+                          "'LOCAL', if file already has Telegram ID - 'TELEGRAM'",
             required = true
     )
-    String notificationTopic;
+    String fileSource;
 
     @McpToolParam(
-            description = "Optional. List of attached files to notification message",
-            required = false
+            description = "Optional. File name that will be assigned to file"
     )
-    List<AttachedFile> attachedFiles;
+    String fileName;
 }

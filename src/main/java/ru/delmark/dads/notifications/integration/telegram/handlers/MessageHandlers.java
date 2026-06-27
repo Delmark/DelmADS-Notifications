@@ -10,6 +10,7 @@ import io.github.natanimn.telebof.types.updates.Message;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections4.CollectionUtils;
+import org.apache.commons.lang3.BooleanUtils;
 import ru.delmark.dads.notifications.exception.TelegramCommandHandleException;
 import ru.delmark.dads.notifications.integration.telegram.TelegramService;
 import ru.delmark.dads.notifications.integration.telegram.dto.MessageConstants;
@@ -18,25 +19,17 @@ import ru.delmark.dads.notifications.integration.telegram.dto.TelegramNotificati
 import java.util.List;
 
 
-
 @Bot
-@RequiredArgsConstructor
 @Slf4j
+@RequiredArgsConstructor
 public class MessageHandlers {
 
     private final TelegramService telegramService;
 
-    @MessageHandler(filter = BotMessageFilter.class, priority = 2)
-    public void commonMessageHandler(BotContext botContext, Message message) {
-        User user = message.getFrom();
-        if (!telegramService.isUserRegistered(user.getId())) {
-            telegramService.registerNewUser(user.getId(), user.getUsername());
-        }
-        telegramService.registerNewChatIfNew(message.getChat().getId(), user.getId());
-    }
-
     @MessageHandler(commands = "start", filter = BotMessageFilter.class, priority = 1)
     public void startCommand(BotContext botContext, Message message) {
+        ensureUserRegistered(message);
+
         String startMessage = MessageConstants.getStartMessage(message.getFrom().getUsername());
         SendMessage messageToSend = buildBaseMessage(botContext, message, startMessage);
         messageToSend.exec();
@@ -44,6 +37,8 @@ public class MessageHandlers {
 
     @MessageHandler(commands = "help", filter = BotMessageFilter.class, priority = 1)
     public void helpCommand(BotContext botContext, Message message) {
+        ensureUserRegistered(message);
+
         String helpMessage = MessageConstants.getHelpMessage();
         SendMessage messageToSend = buildBaseMessage(botContext, message, helpMessage);
         messageToSend.exec();
@@ -51,6 +46,8 @@ public class MessageHandlers {
 
     @MessageHandler(commands = "list", filter = BotMessageFilter.class, priority = 1)
     public void listCommand(BotContext botContext, Message message) {
+        ensureUserRegistered(message);
+
         User user = message.getFrom();
         List<TelegramNotificationTopicsInfo> availableTopics =
                 telegramService.getNotificationTopics(user.getId());
@@ -79,9 +76,12 @@ public class MessageHandlers {
 
     @MessageHandler(commands = "subscribe", filter = BotMessageFilter.class, priority = 1)
     public void subscribeCommand(BotContext botContext, Message message) {
+        ensureUserRegistered(message);
+
         User user = message.getFrom();
         String messageText = message.getText().replaceFirst("/subscribe", "").trim();
         Long chatId = message.getChat().getId();
+
         try {
             telegramService.subscribeToNotification(messageText, user.getId());
             botContext.sendMessage(chatId, "Успешно подписались на %s".formatted(messageText)).exec();
@@ -93,9 +93,12 @@ public class MessageHandlers {
 
     @MessageHandler(commands = "unsubscribe", filter = BotMessageFilter.class, priority = 1)
     public void unsubscribeCommand(BotContext botContext, Message message) {
+        ensureUserRegistered(message);
+
         User user = message.getFrom();
         String messageText = message.getText().replaceFirst("/unsubscribe", "").trim();
         Long chatId = message.getChat().getId();
+
         try {
             telegramService.unsubscribeFromNotification(messageText, user.getId());
             botContext.sendMessage(chatId, "Успешно отписались от %s".formatted(messageText)).exec();
@@ -103,6 +106,14 @@ public class MessageHandlers {
             String errorMessage = "Произошла ошибка %s".formatted(e.getMessage());
             botContext.sendMessage(message.getChat().getId(), errorMessage).exec();
         }
+    }
+
+    private void ensureUserRegistered(Message message) {
+        User user = message.getFrom();
+        if (BooleanUtils.isFalse(telegramService.isUserRegistered(user.getId()))) {
+            telegramService.registerNewUser(user.getId(), user.getUsername());
+        }
+        telegramService.registerNewChatIfNew(message.getChat().getId(), user.getId());
     }
 
     private SendMessage buildBaseMessage(BotContext botContext, Message message, String messageText) {

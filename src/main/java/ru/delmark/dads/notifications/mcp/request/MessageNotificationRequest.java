@@ -16,7 +16,8 @@ import java.util.List;
 public class MessageNotificationRequest implements McpRequest {
 
     @McpToolParam(
-            description = "Required. Notification message that will be sent to Telegram",
+            description = "Required. Notification message that will be sent to Telegram." +
+                          "Can be used for notification summary, supports emoju",
             required = true
     )
     String message;

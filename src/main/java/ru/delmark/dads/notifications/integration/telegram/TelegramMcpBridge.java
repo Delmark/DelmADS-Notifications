@@ -40,7 +40,7 @@ public class TelegramMcpBridge {
         if (CollectionUtils.isEmpty(chatsForSend)) {
             return new McpResponse(
                     "Success",
-                    "Notification processed. Nobody actually was subscribed to this topic."
+                    "Notification processed. Warning: Nobody actually was subscribed to this topic."
             );
         }
 

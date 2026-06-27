@@ -5,13 +5,15 @@
 <mapper namespace="ru.delmark.dads.notifications.data.repository.NotificationTopicDAO">
 
     <resultMap id="notificationTopic" type="ru.delmark.dads.notifications.data.model.NotificationTopic">
-        <id property="name" column="name"/>
+        <id property="id" column="topic_id"/>
+        <result property="name" column="name"/>
         <result property="minAccessLevel" column="min_access_level"/>
         <result property="createdAt" column="created_at"/>
     </resultMap>
 
     <select id="getNotificationTopics" resultMap="notificationTopic">
         SELECT
+            t.topic_id,
             t.name,
             am.name as min_access_level,
             t.created_at
@@ -21,6 +23,7 @@
 
     <select id="getNotificationTopicByName" resultMap="notificationTopic">
         SELECT
+            t.topic_id,
             t.name,
             am.name as min_access_level,
             t.created_at

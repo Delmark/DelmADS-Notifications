@@ -2,3 +2,6 @@ databaseChangeLog:
   - includeAll:
       path: "./mvp_release"
       relativeToChangelogFile: true
+  - includeAll:
+      path: "./mvp_0.0.2"
+      relativeToChangelogFile: true

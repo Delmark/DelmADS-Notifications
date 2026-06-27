@@ -1,3 +1,6 @@
+--liquibase formatted sql
+
+--changeset delmark:init-access-mode
 create table if not exists access_mode (
     name varchar(120) unique not null,
     access_level int primary key
@@ -9,6 +12,7 @@ insert into access_mode (name, access_level) values
 ('OWNER', 3)
 on conflict (name) do nothing;
 
+--changeset delmark:init-core-tables
 create table if not exists bot_user (
   id bigint primary key,
   username text not null,
@@ -34,6 +38,7 @@ create table if not exists notification_subscriptions (
     primary key (user_id, topic_name)
 );
 
+--changeset delmark:notif-access-function splitStatements:false
 create or replace function check_user_notif_access() returns trigger as $notif_access_check$
     declare
         user_access_level int;
@@ -55,5 +60,6 @@ create or replace function check_user_notif_access() returns trigger as $notif_a
     end;
 $notif_access_check$ language plpgsql;
 
+--changeset delmark:notif-access-trigger
 create trigger trg_notif_access_check before insert or update on notification_subscriptions
     for each row execute function check_user_notif_access();

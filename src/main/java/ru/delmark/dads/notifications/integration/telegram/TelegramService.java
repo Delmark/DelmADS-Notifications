@@ -66,13 +66,13 @@ public class TelegramService {
             return Collections.emptyList();
         }
 
-        Set<String> userSubs = getUserSubscriptions(user.getId());
+        Set<Long> userSubs = getUserSubscribedTopicIds(user.getId());
 
         return topics.stream()
                 .map(topic ->
                         new TelegramNotificationTopicsInfo(
                                 topic.getName(),
-                                userSubs.contains(topic.getName())
+                                userSubs.contains(topic.getId())
                         )
                 )
                 .collect(Collectors.toList());
@@ -85,22 +85,21 @@ public class TelegramService {
     public void subscribeToNotification(String topicName, Long userId) {
         BotUser user = getUser(userId);
 
-        NotificationTopic topic = notificationTopicDAO.getNotificationTopicByName(topicName)
-                .orElseThrow(() -> new TelegramCommandHandleException("Указанный тэг рассылки не найден"));
+        NotificationTopic topic = getTopic(topicName);
 
         if (isNotAvailableForAccess(user.getAccessLevel()).test(topic)) {
             throw new TelegramCommandHandleException("У вас нет доступа к данной рассылке");
         }
 
-        Set<String> userSubs = getUserSubscriptions(user.getId());
-        if (userSubs.contains(topic.getName())) {
+        Set<Long> userSubs = getUserSubscribedTopicIds(user.getId());
+        if (userSubs.contains(topic.getId())) {
             throw new TelegramCommandHandleException("Вы уже подписаны на данную рассылку");
         }
 
         notificationSubscriptionDAO.subscribe(
                 new NotificationSubscription(
                         user.getId(),
-                        topic.getName(),
+                        topic.getId(),
                         OffsetDateTime.now()
                 )
         );
@@ -108,13 +107,19 @@ public class TelegramService {
 
     public void unsubscribeFromNotification(String topicName, Long userId) {
         BotUser user = getUser(userId);
+        NotificationTopic topic = getTopic(topicName);
 
-        Set<String> userSubs = getUserSubscriptions(user.getId());
-        if (!userSubs.contains(topicName)) {
+        Set<Long> userSubs = getUserSubscribedTopicIds(user.getId());
+        if (!userSubs.contains(topic.getId())) {
             throw new TelegramCommandHandleException("Вы не подписаны на данную рассылку");
         }
 
-        notificationSubscriptionDAO.unsubscribe(topicName, userId);
+        notificationSubscriptionDAO.unsubscribe(topic.getId(), userId);
+    }
+
+    private NotificationTopic getTopic(String topicName) {
+        return notificationTopicDAO.getNotificationTopicByName(topicName)
+                .orElseThrow(() -> new TelegramCommandHandleException("Указанный тэг рассылки не найден"));
     }
 
     private BotUser getUser(Long userId) {
@@ -122,8 +127,8 @@ public class TelegramService {
                 .orElseThrow(() -> new TelegramCommandHandleException("Пользователь не найден"));
     }
 
-    private Set<String> getUserSubscriptions(Long userId) {
+    private Set<Long> getUserSubscribedTopicIds(Long userId) {
         return notificationSubscriptionDAO.findUserSubscriptions(userId)
-                .stream().map(NotificationSubscription::getTopicName).collect(Collectors.toSet());
+                .stream().map(NotificationSubscription::getTopicId).collect(Collectors.toSet());
     }
 }

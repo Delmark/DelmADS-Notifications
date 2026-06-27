@@ -22,6 +22,8 @@ extra["springAiVersion"] = "2.0.0"
 dependencies {
 	implementation("org.springframework.boot:spring-boot-starter-actuator")
 	implementation("org.springframework.boot:spring-boot-starter-webmvc")
+	implementation("org.springframework.boot:spring-boot-starter-cache")
+
 	implementation("org.mybatis.spring.boot:mybatis-spring-boot-starter:4.0.1")
 	implementation("org.springframework.ai:spring-ai-starter-mcp-server-webmvc")
 

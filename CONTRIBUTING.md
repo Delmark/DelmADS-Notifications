@@ -1,36 +1,41 @@
 # Рабочий процесс
 
-Проект использует лёгкий **GitHub Flow**: транк `main` + короткоживущие ветки.
+Проект использует **GitHub Flow с pull request'ами**: транк `main` + короткоживущие
+ветки, вливание — только через PR.
 
 ## Правила
 
-1. `main` всегда в рабочем состоянии (собирается, тесты зелёные). Напрямую в `main`
-   не коммитим.
+1. `main` всегда в рабочем состоянии (собирается). Прямых коммитов в `main` нет — изменения попадают туда только через PR.
 2. Каждая задача — отдельная ветка от `main`:
    - `feat/<имя>` — новая функциональность
    - `fix/<имя>` — исправление бага
    - `chore/<имя>` — зависимости, конфиги, рефакторинг
    - `docs/<имя>` — документация
-3. Закончил → влил в `main` → ветку удалил.
+3. Готово → пушишь ветку → открываешь PR → PR проходит ревью контрибьютерами → merge в `main` → ветку удаляешь.
 4. Релизы помечаем тегами по semver: `v0.1.0`, `v0.2.0`, …
 
 ## Цикл
 
 ```bash
-git switch main && git pull
-git switch -c feat/<имя>
+git switch main && git pull              # актуальный main
+git switch -c feat/<имя>                 # ветка под задачу
 # ... код, небольшие коммиты ...
 git commit -m "feat: краткое описание"
-git switch main
-git merge --no-ff feat/<имя>
-git branch -d feat/<имя>
-git push
+git push -u origin feat/<имя>            # запушить ветку
+
+# открыть PR:
+#   - веб: кнопка «Compare & pull request» на GitHub, либо
+#   - gh:  gh pr create --fill           (если установлен GitHub CLI)
+
+# после ревью и merge PR на GitHub:
+git switch main && git pull              # подтянуть смёрженное
+git branch -d feat/<имя>                 # удалить локальную ветку
 ```
 
 ## Сообщения коммитов — [Conventional Commits](https://www.conventionalcommits.org/)
 
-Формат `<тип>: <описание>`. Типы: `feat`, `fix`, `chore`, `docs`, `refactor`,
-`test`, `build`, `ci`.
+Формат `<тип>: <описание>`. Типы: `feat`, `fix`, `chore`,
+`docs`, `refactor`, `test`, `build`, `ci`.
 
 ## Секреты
 

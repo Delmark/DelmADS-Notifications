@@ -9,6 +9,6 @@ import java.time.OffsetDateTime;
 @AllArgsConstructor
 public class NotificationSubscription {
     Long userId;
-    String topicName;
+    Long topicId;
     OffsetDateTime createdAt;
 }

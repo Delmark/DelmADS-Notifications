@@ -9,5 +9,5 @@ import java.util.List;
 public interface NotificationSubscriptionDAO {
     List<NotificationSubscription> findUserSubscriptions(Long userId);
     void subscribe(NotificationSubscription notificationSubscription);
-    void unsubscribe(String topicName, Long userId);
+    void unsubscribe(Long topicId, Long userId);
 }

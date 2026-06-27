@@ -8,20 +8,20 @@
             resultType="ru.delmark.dads.notifications.data.model.NotificationSubscription">
         SELECT
             user_id,
-            topic_name,
+            topic_id,
             created_at
         FROM notification_subscriptions
         WHERE user_id = #{userId}
     </select>
 
     <insert id="subscribe">
-        INSERT INTO notification_subscriptions (user_id, topic_name)
-        VALUES (#{userId}, #{topicName})
-        ON CONFLICT (user_id, topic_name) DO NOTHING
+        INSERT INTO notification_subscriptions (user_id, topic_id)
+        VALUES (#{userId}, #{topicId})
+        ON CONFLICT (user_id, topic_id) DO NOTHING
     </insert>
 
     <delete id="unsubscribe">
         DELETE FROM notification_subscriptions
-        WHERE topic_name = #{topicName} AND user_id = #{userId}
+        WHERE topic_id = #{topicId} AND user_id = #{userId}
     </delete>
 </mapper>

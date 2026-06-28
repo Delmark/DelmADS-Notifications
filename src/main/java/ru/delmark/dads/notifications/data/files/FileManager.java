@@ -11,6 +11,7 @@ import ru.delmark.dads.notifications.exception.LocalFileExtractException;
 import java.io.File;
 import java.io.InputStream;
 import java.nio.file.Files;
+import java.nio.file.LinkOption;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.StandardCopyOption;
@@ -45,7 +46,7 @@ public class FileManager {
                 .map(root -> Path.of(root).toAbsolutePath().normalize())
                 .anyMatch(requestPath::startsWith);
 
-        if (!Files.isRegularFile(requestPath) || !allowed) {
+        if (!Files.isRegularFile(requestPath, LinkOption.NOFOLLOW_LINKS) || !allowed) {
             throw new LocalFileExtractException("Local file is outside configured MCP roots or does not exist");
         }
 

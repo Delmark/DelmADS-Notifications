@@ -7,6 +7,7 @@ import lombok.RequiredArgsConstructor;
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.stereotype.Component;
+import ru.delmark.dads.notifications.data.files.FileManager;
 import ru.delmark.dads.notifications.data.model.NotificationTopic;
 import ru.delmark.dads.notifications.data.repository.ChatDAO;
 import ru.delmark.dads.notifications.data.repository.NotificationTopicDAO;
@@ -20,6 +21,8 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import java.util.function.Function;
+import java.util.function.Supplier;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -28,6 +31,7 @@ import java.util.stream.Stream;
 public class TelegramMcpBridge {
 
     private final BotClient botClient;
+    private final FileManager fileManager;
     private final NotificationTopicDAO notificationTopicDAO;
     private final ChatDAO chatDAO;
 
@@ -57,7 +61,8 @@ public class TelegramMcpBridge {
         }
 
         for (Long chatId : chatsForSend) {
-            botClient.context.sendMessage(chatId, request.getMessage()).await();
+            // сначала всегда отправляем текст, потом файлы
+            botClient.context.sendMessage(chatId, request.getMessage()).exec();
             if (documentsForChats.containsKey(chatId)) {
                 documentsForChats.get(chatId).forEach(SendDocument::await);
             }
@@ -71,20 +76,29 @@ public class TelegramMcpBridge {
 
     private List<IdentifiableDocument> resolveTelegramDocs(List<Long> chatsToSend, List<AttachedFile> attachedFiles) {
         return attachedFiles.stream()
-                .flatMap(file -> {
-                    validateAttachedFile(file);
-                    BotContext context = botClient.context;
-                    Stream<Long> chatIdsStream = chatsToSend.stream();
-                    return switch (file.getFileSource().toLowerCase(Locale.ROOT)) {
-                        case "telegram" -> chatIdsStream.map(chatId ->
-                                new IdentifiableDocument(chatId, context.sendDocument(chatId, file.getFileId()))
-                        );
-                        case "local" -> chatIdsStream.map(chatId ->
-                                new IdentifiableDocument(chatId, context.sendDocument(chatId, new File(file.getFileId())))
-                        );
-                        default -> throw new McpEventHandleException("Unsupported file source: " + file.getFileSource());
-                    };
-                }).collect(Collectors.toList());
+                .peek(this::validateAttachedFile)
+                .flatMap(resolveChatDocuments(chatsToSend.stream(), botClient.context))
+                .filter(doc -> doc.sendDocument() != null)
+                .collect(Collectors.toList());
+    }
+
+    private Function<AttachedFile, Stream<IdentifiableDocument>> resolveChatDocuments(Stream<Long> chatIds, BotContext context) {
+        return file ->
+                switch (file.getFileSource().toLowerCase(Locale.ROOT)) {
+                    case "telegram" -> chatIds.map(createTGDocumentForSend(context, file.getFileId()));
+                    case "local" -> chatIds.map(createFileDocumentForSend(context, () -> fileManager.getLocalFile(file.getFileId())));
+                    case "server" -> chatIds.map(createFileDocumentForSend(context, () -> fileManager.getServerFile(file.getFileId())));
+                    default -> throw new McpEventHandleException("Unsupported file source: " + file.getFileSource());
+                };
+    }
+
+    // input -> chatId
+    private Function<Long, IdentifiableDocument> createFileDocumentForSend(BotContext context, Supplier<File> fileSupplier) {
+        return chatId -> new IdentifiableDocument(chatId, context.sendDocument(chatId, fileSupplier.get()));
+    }
+
+    private Function<Long, IdentifiableDocument> createTGDocumentForSend(BotContext context, String fileId) {
+        return chatId -> new IdentifiableDocument(chatId, context.sendDocument(chatId, fileId));
     }
 
     private void validateAttachedFile(AttachedFile file) {

@@ -12,14 +12,15 @@ import tools.jackson.databind.annotation.JsonNaming;
 @FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
 public class AttachedFile {
     @McpToolParam(
-            description = "Required. File ID (Telegram ID/Local Absolute Filepath)",
+            description = "Required. File ID (Telegram ID/Server File UUID/Local Absolute Filepath)",
             required = true
     )
     String fileId;
 
     @McpToolParam(
             description = "Required. File source, if file was uploaded to server:" +
-                          "'LOCAL', if file already has Telegram ID - 'TELEGRAM'",
+                          "'SERVER', if MCP deployed locally - 'LOCAL'," +
+                          " if file from TG/already has Telegram ID - 'TELEGRAM'",
             required = true
     )
     String fileSource;

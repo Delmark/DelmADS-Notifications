@@ -77,24 +77,28 @@ public class TelegramMcpBridge {
     private List<IdentifiableDocument> resolveTelegramDocs(List<Long> chatsToSend, List<AttachedFile> attachedFiles) {
         return attachedFiles.stream()
                 .peek(this::validateAttachedFile)
-                .flatMap(resolveChatDocuments(chatsToSend.stream(), botClient.context))
+                .flatMap(resolveChatDocuments(chatsToSend, botClient.context))
                 .filter(doc -> doc.sendDocument() != null)
-                .collect(Collectors.toList());
+                .toList();
     }
 
-    private Function<AttachedFile, Stream<IdentifiableDocument>> resolveChatDocuments(Stream<Long> chatIds, BotContext context) {
+    private Function<AttachedFile, Stream<IdentifiableDocument>> resolveChatDocuments(List<Long> chatIds, BotContext context) {
         return file ->
                 switch (file.getFileSource().toLowerCase(Locale.ROOT)) {
-                    case "telegram" -> chatIds.map(createTGDocumentForSend(context, file.getFileId()));
-                    case "local" -> chatIds.map(createFileDocumentForSend(context, () -> fileManager.getLocalFile(file.getFileId())));
-                    case "server" -> chatIds.map(createFileDocumentForSend(context, () -> fileManager.getServerFile(file.getFileId())));
+                    case "telegram" -> chatIds.stream().map(createTGDocumentForSend(context, file.getFileId()));
+                    case "local" -> chatIds.stream().map(createFileDocumentForSend(context, () -> fileManager.getLocalFile(file.getFileId())));
+                    case "server" -> chatIds.stream().map(createFileDocumentForSend(context, () -> fileManager.getServerFile(file.getFileId())));
                     default -> throw new McpEventHandleException("Unsupported file source: " + file.getFileSource());
                 };
     }
 
     // input -> chatId
     private Function<Long, IdentifiableDocument> createFileDocumentForSend(BotContext context, Supplier<File> fileSupplier) {
-        return chatId -> new IdentifiableDocument(chatId, context.sendDocument(chatId, fileSupplier.get()));
+        return chatId -> {
+            File documentFile = fileSupplier.get();
+            SendDocument sendDoc = (documentFile != null) ? context.sendDocument(chatId, documentFile) : null;
+            return new IdentifiableDocument(chatId, sendDoc);
+        };
     }
 
     private Function<Long, IdentifiableDocument> createTGDocumentForSend(BotContext context, String fileId) {

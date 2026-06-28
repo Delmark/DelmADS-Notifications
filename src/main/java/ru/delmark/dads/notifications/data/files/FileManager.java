@@ -28,7 +28,7 @@ public class FileManager {
     @Value("${file.upload.directory:/data/files}")
     private String filePath;
 
-    @Value("${mcp.roots}")
+    @Value("${mcp.roots:}")
     private List<String> mcpRoots;
 
     @Value("${file.ttl:1d}")
@@ -40,20 +40,22 @@ public class FileManager {
                     " you need to create and specify roots directories");
         }
 
-        mcpRoots.stream()
-                .filter(localFilePath::startsWith)
-                .map(File::new).filter(File::exists)
-                .findFirst()
-                .orElseThrow(() -> new LocalFileExtractException(
-                        "No mcp roots matching your local found, user should create them manually")
-                );
+        Path requestPath = Paths.get(localFilePath).toAbsolutePath().normalize();
+        boolean allowed = mcpRoots.stream()
+                .map(root -> Path.of(root).toAbsolutePath().normalize())
+                .anyMatch(requestPath::startsWith);
 
-        return new File(localFilePath);
+        if (!Files.isRegularFile(requestPath) || !allowed) {
+            throw new LocalFileExtractException("Local file is outside configured MCP roots or does not exist");
+        }
+
+        return requestPath.toFile();
     }
 
     public File getServerFile(String fileUUID) {
-        return (Files.exists(Paths.get(filePath, fileUUID)))
-                ? new File(filePath + fileUUID)
+        Path serverFilePath = Paths.get(filePath, fileUUID);
+        return (Files.exists(serverFilePath))
+                ? serverFilePath.toFile()
                 : null;
     }
 
@@ -74,15 +76,10 @@ public class FileManager {
     }
 
     public void clearOldFiles() {
-        Path serverFiles = Paths.get(filePath);
-        deleteExpiredDirectoryFiles(serverFiles);
+        Path serverFilesDir = Paths.get(filePath);
 
-        mcpRoots.forEach(root -> deleteExpiredDirectoryFiles(Paths.get(root)));
-    }
-
-    private void deleteExpiredDirectoryFiles(Path directoryPath) {
-        if (Files.exists(directoryPath) && Files.isDirectory(directoryPath)) {
-            File dir = directoryPath.toFile();
+        if (Files.exists(serverFilesDir) && Files.isDirectory(serverFilesDir)) {
+            File dir = serverFilesDir.toFile();
             Optional.ofNullable(dir.listFiles())
                     .ifPresent(list ->
                             Arrays.stream(list)

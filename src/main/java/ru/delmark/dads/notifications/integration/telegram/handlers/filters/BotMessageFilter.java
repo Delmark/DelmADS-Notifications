@@ -1,4 +1,4 @@
-package ru.delmark.dads.notifications.integration.telegram.handlers;
+package ru.delmark.dads.notifications.integration.telegram.handlers.filters;
 
 import io.github.natanimn.telebof.filters.CustomFilter;
 import io.github.natanimn.telebof.types.updates.Update;

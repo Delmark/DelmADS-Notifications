@@ -2,21 +2,17 @@ package ru.delmark.dads.notifications.integration.telegram.handlers;
 
 import io.github.natanimn.telebof.BotContext;
 import io.github.natanimn.telebof.annotations.MessageHandler;
-import io.github.natanimn.telebof.enums.ParseMode;
 import io.github.natanimn.telebof.requests.send.SendMessage;
 import io.github.natanimn.telebof.spring.Bot;
 import io.github.natanimn.telebof.types.chat_and_user.User;
 import io.github.natanimn.telebof.types.updates.Message;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.BooleanUtils;
-import ru.delmark.dads.notifications.exception.TelegramCommandHandleException;
 import ru.delmark.dads.notifications.integration.telegram.TelegramService;
 import ru.delmark.dads.notifications.integration.telegram.dto.MessageConstants;
-import ru.delmark.dads.notifications.integration.telegram.dto.TelegramNotificationTopicsInfo;
-
-import java.util.List;
+import ru.delmark.dads.notifications.integration.telegram.handlers.filters.BotMessageFilter;
+import ru.delmark.dads.notifications.utils.MarkdownV2Escaper;
 
 
 @Bot
@@ -25,87 +21,60 @@ import java.util.List;
 public class MessageHandlers {
 
     private final TelegramService telegramService;
+    private final CommonHandlerOperations operations;
 
     @MessageHandler(commands = "start", filter = BotMessageFilter.class, priority = 1)
     public void startCommand(BotContext botContext, Message message) {
         ensureUserRegistered(message);
 
-        String startMessage = MessageConstants.getStartMessage(message.getFrom().getUsername());
-        SendMessage messageToSend = buildBaseMessage(botContext, message, startMessage);
+        String startMessage = MessageConstants.getStartMessage(
+                MarkdownV2Escaper.escape(message.getFrom().getUsername())
+        );
+        SendMessage messageToSend = operations.buildBaseMessage(botContext, message.getChat().getId(), startMessage);
+        messageToSend.replyMarkup(operations.buildDefaultMenuMarkup());
         messageToSend.exec();
     }
 
     @MessageHandler(commands = "help", filter = BotMessageFilter.class, priority = 1)
     public void helpCommand(BotContext botContext, Message message) {
         ensureUserRegistered(message);
+        operations.sendHelpMessage(botContext, message.getChat().getId());
+    }
 
-        String helpMessage = MessageConstants.getHelpMessage();
-        SendMessage messageToSend = buildBaseMessage(botContext, message, helpMessage);
+    @MessageHandler(commands = "menu", filter = BotMessageFilter.class, priority = 1)
+    public void menuCommand(BotContext botContext, Message message) {
+        ensureUserRegistered(message);
+        String menuMessage = "Выберите опцию";
+        SendMessage messageToSend = operations.buildBaseMessage(botContext, message.getChat().getId(), menuMessage);
+        messageToSend.replyMarkup(operations.buildDefaultMenuMarkup());
         messageToSend.exec();
     }
 
     @MessageHandler(commands = "list", filter = BotMessageFilter.class, priority = 1)
     public void listCommand(BotContext botContext, Message message) {
         ensureUserRegistered(message);
-
-        User user = message.getFrom();
-        List<TelegramNotificationTopicsInfo> availableTopics =
-                telegramService.getNotificationTopics(user.getId());
-
-        StringBuilder messageText = new StringBuilder();
-        if (CollectionUtils.isEmpty(availableTopics)) {
-            messageText.append("К сожалению, на данный момент нет рассылок на которые вы можете подписаться");
-            botContext.sendMessage(message.getChat().getId(), messageText.toString()).exec();
-            return;
-        }
-
-        messageText.append("В данный момент список всех рассылок: \n");
-        availableTopics.forEach(topic ->
-                messageText.append(
-                        "\n%s \\- %s".formatted(
-                                topic.getTopic(),
-                                topic.isUserSubscribed()
-                                        ? "✅ Подписан"
-                                        : "❌ Не подписан"
-                        )
-                )
+        operations.sendUserTopicActions(
+                botContext, message.getChat().getId(),
+                message.getFrom().getId()
         );
-
-        buildBaseMessage(botContext, message, messageText.toString()).exec();
     }
 
     @MessageHandler(commands = "subscribe", filter = BotMessageFilter.class, priority = 1)
     public void subscribeCommand(BotContext botContext, Message message) {
         ensureUserRegistered(message);
-
         User user = message.getFrom();
-        String messageText = message.getText().replaceFirst("/subscribe", "").trim();
+        String topicName = message.getText().replaceFirst("/subscribe", "").trim();
         Long chatId = message.getChat().getId();
-
-        try {
-            telegramService.subscribeToNotification(messageText, user.getId());
-            botContext.sendMessage(chatId, "Успешно подписались на %s".formatted(messageText)).exec();
-        } catch (TelegramCommandHandleException e) {
-            String errorMessage = "Произошла ошибка %s".formatted(e.getMessage());
-            botContext.sendMessage(message.getChat().getId(), errorMessage).exec();
-        }
+        operations.subscribeToTopic(botContext, topicName, chatId, user.getId(), true);
     }
 
     @MessageHandler(commands = "unsubscribe", filter = BotMessageFilter.class, priority = 1)
     public void unsubscribeCommand(BotContext botContext, Message message) {
         ensureUserRegistered(message);
-
         User user = message.getFrom();
-        String messageText = message.getText().replaceFirst("/unsubscribe", "").trim();
+        String topicName = message.getText().replaceFirst("/unsubscribe", "").trim();
         Long chatId = message.getChat().getId();
-
-        try {
-            telegramService.unsubscribeFromNotification(messageText, user.getId());
-            botContext.sendMessage(chatId, "Успешно отписались от %s".formatted(messageText)).exec();
-        } catch (TelegramCommandHandleException e) {
-            String errorMessage = "Произошла ошибка %s".formatted(e.getMessage());
-            botContext.sendMessage(message.getChat().getId(), errorMessage).exec();
-        }
+        operations.unsubscribeFromTopic(botContext, topicName, chatId, user.getId(), true);
     }
 
     private void ensureUserRegistered(Message message) {
@@ -114,11 +83,5 @@ public class MessageHandlers {
             telegramService.registerNewUser(user.getId(), user.getUsername());
         }
         telegramService.registerNewChatIfNew(message.getChat().getId(), user.getId());
-    }
-
-    private SendMessage buildBaseMessage(BotContext botContext, Message message, String messageText) {
-        return botContext
-                .sendMessage(message.getChat().getId(), messageText)
-                .parseMode(ParseMode.MARKDOWNV2);
     }
 }

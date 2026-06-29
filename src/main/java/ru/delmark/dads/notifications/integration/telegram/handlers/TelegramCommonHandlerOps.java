@@ -8,6 +8,7 @@ import io.github.natanimn.telebof.types.keyboard.InlineKeyboardMarkup;
 import lombok.RequiredArgsConstructor;
 import org.apache.commons.collections4.CollectionUtils;
 import org.springframework.stereotype.Component;
+import ru.delmark.dads.notifications.exception.TelegramCommandHandleException;
 import ru.delmark.dads.notifications.integration.telegram.TelegramService;
 import ru.delmark.dads.notifications.integration.telegram.dto.MessageConstants;
 import ru.delmark.dads.notifications.integration.telegram.dto.TelegramNotificationTopicsInfo;
@@ -17,7 +18,7 @@ import java.util.List;
 
 @Component
 @RequiredArgsConstructor
-public class TelegramHandlerOps {
+public class TelegramCommonHandlerOps {
 
     private final TelegramService telegramService;
 
@@ -25,13 +26,18 @@ public class TelegramHandlerOps {
         List<TelegramNotificationTopicsInfo> availableTopics =
                 telegramService.getNotificationTopics(userId);
 
-        StringBuilder messageText = new StringBuilder();
         if (CollectionUtils.isEmpty(availableTopics)) {
-            messageText.append("К сожалению, на данный момент нет рассылок на которые вы можете подписаться");
-            ctx.sendMessage(chatId, messageText.toString()).exec();
+            ctx.sendMessage(chatId,"К сожалению, на данный момент нет рассылок на которые вы можете подписаться").exec();
             return;
         }
 
+        SendMessage send = buildBaseMessage(ctx, chatId, buildTopicListMessage(availableTopics));
+        send.replyMarkup(buildTopicControlMarkup(availableTopics));
+        send.exec();
+    }
+
+    public String buildTopicListMessage(List<TelegramNotificationTopicsInfo> availableTopics) {
+        StringBuilder messageText = new StringBuilder();
         messageText.append("В данный момент список всех рассылок: \n");
         availableTopics.forEach(topic ->
                 messageText.append(
@@ -43,9 +49,10 @@ public class TelegramHandlerOps {
                         )
                 )
         );
+        return messageText.toString();
+    }
 
-        SendMessage send = buildBaseMessage(ctx, chatId, messageText.toString());
-
+    public InlineKeyboardMarkup buildTopicControlMarkup(List<TelegramNotificationTopicsInfo> availableTopics) {
         InlineKeyboardMarkup topicControlMarkup = new InlineKeyboardMarkup();
         topicControlMarkup.setRowWidth(1);
         topicControlMarkup.addKeyboard(
@@ -62,9 +69,7 @@ public class TelegramHandlerOps {
                         })
                         .toArray(InlineKeyboardButton[]::new)
         );
-
-        send.replyMarkup(topicControlMarkup);
-        send.exec();
+        return topicControlMarkup;
     }
 
     public void sendHelpMessage(BotContext ctx, Long chatId, String username) {
@@ -72,6 +77,26 @@ public class TelegramHandlerOps {
         SendMessage messageToSend = buildBaseMessage(ctx, chatId, startMessage);
         messageToSend.replyMarkup(buildDefaultMenuMarkup());
         messageToSend.exec();
+    }
+
+    public void subscribeToTopic(BotContext ctx, String topicName, Long chatId, Long userId) {
+        try {
+            telegramService.subscribeToNotification(topicName, userId);
+            ctx.sendMessage(chatId, "Успешно подписались на %s".formatted(topicName)).exec();
+        } catch (TelegramCommandHandleException e) {
+            String errorMessage = "Произошла ошибка %s".formatted(e.getMessage());
+            ctx.sendMessage(chatId, errorMessage).exec();
+        }
+    }
+
+    public void unsubscribeFromTopic(BotContext ctx, String topicName, Long chatId, Long userId) {
+        try {
+            telegramService.unsubscribeFromNotification(topicName, userId);
+            ctx.sendMessage(chatId, "Успешно отписались от %s".formatted(topicName)).exec();
+        } catch (TelegramCommandHandleException e) {
+            String errorMessage = "Произошла ошибка %s".formatted(e.getMessage());
+            ctx.sendMessage(chatId, errorMessage).exec();
+        }
     }
 
     public InlineKeyboardMarkup buildDefaultMenuMarkup() {

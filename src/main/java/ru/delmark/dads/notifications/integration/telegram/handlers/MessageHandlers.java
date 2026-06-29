@@ -9,7 +9,6 @@ import io.github.natanimn.telebof.types.updates.Message;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.BooleanUtils;
-import ru.delmark.dads.notifications.exception.TelegramCommandHandleException;
 import ru.delmark.dads.notifications.integration.telegram.TelegramService;
 import ru.delmark.dads.notifications.integration.telegram.dto.MessageConstants;
 import ru.delmark.dads.notifications.integration.telegram.handlers.filters.BotMessageFilter;
@@ -21,7 +20,7 @@ import ru.delmark.dads.notifications.integration.telegram.handlers.filters.BotMe
 public class MessageHandlers {
 
     private final TelegramService telegramService;
-    private final TelegramHandlerOps operations;
+    private final TelegramCommonHandlerOps operations;
 
     @MessageHandler(commands = "start", filter = BotMessageFilter.class, priority = 1)
     public void startCommand(BotContext botContext, Message message) {
@@ -63,35 +62,19 @@ public class MessageHandlers {
     @MessageHandler(commands = "subscribe", filter = BotMessageFilter.class, priority = 1)
     public void subscribeCommand(BotContext botContext, Message message) {
         ensureUserRegistered(message);
-
         User user = message.getFrom();
-        String messageText = message.getText().replaceFirst("/subscribe", "").trim();
+        String topicName = message.getText().replaceFirst("/subscribe", "").trim();
         Long chatId = message.getChat().getId();
-
-        try {
-            telegramService.subscribeToNotification(messageText, user.getId());
-            botContext.sendMessage(chatId, "Успешно подписались на %s".formatted(messageText)).exec();
-        } catch (TelegramCommandHandleException e) {
-            String errorMessage = "Произошла ошибка %s".formatted(e.getMessage());
-            botContext.sendMessage(message.getChat().getId(), errorMessage).exec();
-        }
+        operations.subscribeToTopic(botContext, topicName, chatId, user.getId());
     }
 
     @MessageHandler(commands = "unsubscribe", filter = BotMessageFilter.class, priority = 1)
     public void unsubscribeCommand(BotContext botContext, Message message) {
         ensureUserRegistered(message);
-
         User user = message.getFrom();
-        String messageText = message.getText().replaceFirst("/unsubscribe", "").trim();
+        String topicName = message.getText().replaceFirst("/unsubscribe", "").trim();
         Long chatId = message.getChat().getId();
-
-        try {
-            telegramService.unsubscribeFromNotification(messageText, user.getId());
-            botContext.sendMessage(chatId, "Успешно отписались от %s".formatted(messageText)).exec();
-        } catch (TelegramCommandHandleException e) {
-            String errorMessage = "Произошла ошибка %s".formatted(e.getMessage());
-            botContext.sendMessage(message.getChat().getId(), errorMessage).exec();
-        }
+        operations.unsubscribeFromTopic(botContext, topicName, chatId, user.getId());
     }
 
     private void ensureUserRegistered(Message message) {

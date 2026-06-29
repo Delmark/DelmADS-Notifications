@@ -21,4 +21,13 @@ public enum TopicOps {
     public String getFormattedCallbackDate(String topicName) {
         return (operation + "%s").formatted(topicName);
     }
+
+    public static TopicOps fromOpTag(String operation) {
+        for (TopicOps op : TopicOps.values()) {
+            if (op.getOperation().equals(operation)) {
+                return op;
+            }
+        }
+        throw new IllegalArgumentException("Unknown operation: " + operation);
+    }
 }

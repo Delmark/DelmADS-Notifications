@@ -20,7 +20,7 @@ import ru.delmark.dads.notifications.integration.telegram.handlers.filters.BotMe
 public class MessageHandlers {
 
     private final TelegramService telegramService;
-    private final TelegramCommonHandlerOps operations;
+    private final CommonHandlerOperations operations;
 
     @MessageHandler(commands = "start", filter = BotMessageFilter.class, priority = 1)
     public void startCommand(BotContext botContext, Message message) {
@@ -35,10 +35,7 @@ public class MessageHandlers {
     @MessageHandler(commands = "help", filter = BotMessageFilter.class, priority = 1)
     public void helpCommand(BotContext botContext, Message message) {
         ensureUserRegistered(message);
-        operations.sendHelpMessage(
-                botContext, message.getChat().getId(),
-                message.getFrom().getUsername()
-        );
+        operations.sendHelpMessage(botContext, message.getChat().getId());
     }
 
     @MessageHandler(commands = "menu", filter = BotMessageFilter.class, priority = 1)

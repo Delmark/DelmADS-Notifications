@@ -18,7 +18,7 @@ public enum TopicOps {
     private static final Set<String> stringTopicOps = EnumSet.allOf(TopicOps.class).stream()
             .map(TopicOps::getOperation).collect(Collectors.toSet());
 
-    public String getFormattedCallbackDate(String topicName) {
+    public String getFormattedCallbackData(String topicName) {
         return (operation + "%s").formatted(topicName);
     }
 

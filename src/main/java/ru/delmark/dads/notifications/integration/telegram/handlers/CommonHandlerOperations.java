@@ -18,7 +18,7 @@ import java.util.List;
 
 @Component
 @RequiredArgsConstructor
-public class TelegramCommonHandlerOps {
+public class CommonHandlerOperations {
 
     private final TelegramService telegramService;
 
@@ -63,7 +63,7 @@ public class TelegramCommonHandlerOps {
 
                             TopicOps topicOperation = topic.isUserSubscribed()
                                     ? TopicOps.UNSUBSCRIBE : TopicOps.SUBSCRIBE;
-                            String callback = topicOperation.getFormattedCallbackDate(topic.getTopic());
+                            String callback = topicOperation.getFormattedCallbackData(topic.getTopic());
 
                             return new InlineKeyboardButton(buttonText, callback);
                         })
@@ -72,8 +72,8 @@ public class TelegramCommonHandlerOps {
         return topicControlMarkup;
     }
 
-    public void sendHelpMessage(BotContext ctx, Long chatId, String username) {
-        String startMessage = MessageConstants.getStartMessage(username);
+    public void sendHelpMessage(BotContext ctx, Long chatId) {
+        String startMessage = MessageConstants.getHelpMessage();
         SendMessage messageToSend = buildBaseMessage(ctx, chatId, startMessage);
         messageToSend.replyMarkup(buildDefaultMenuMarkup());
         messageToSend.exec();

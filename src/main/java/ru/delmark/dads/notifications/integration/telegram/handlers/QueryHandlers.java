@@ -21,14 +21,13 @@ import java.util.List;
 @RequiredArgsConstructor
 public class QueryHandlers {
 
-    private final TelegramCommonHandlerOps ops;
-    private final TelegramService service;
+    private final CommonHandlerOperations ops;
     private final TelegramService telegramService;
 
     @CallbackHandler(data = "help_callback")
     public void openHelpCallback(BotContext ctx, CallbackQuery callback) {
         cleanOldMarkup(ctx, callback);
-        ops.sendHelpMessage(ctx, callback.getMessage().getChat().getId(), callback.getFrom().getUsername());
+        ops.sendHelpMessage(ctx, callback.getMessage().getChat().getId());
     }
 
     @CallbackHandler(data = "topic_list")
@@ -65,7 +64,11 @@ public class QueryHandlers {
         }
 
         Integer messageId = callback.getMessage().getMessageId();
-        ctx.editMessageText(chatId, newMessage, messageId).replyMarkup(markup).exec();
+        EditMessageText messageEdit = ctx.editMessageText(chatId, newMessage, messageId);
+        if (markup != null) {
+            messageEdit = messageEdit.replyMarkup(markup);
+        }
+        messageEdit.exec();
     }
 
     private void cleanOldMarkup(BotContext ctx, CallbackQuery callback) {

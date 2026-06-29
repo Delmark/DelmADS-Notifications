@@ -30,6 +30,8 @@ dependencies {
 	implementation("io.github.natanimn:telebof:2.0.0")
 	implementation("io.github.natanimn:telebof-spring:2.0.0")
 
+	implementation("org.apache.commons:commons-text:1.13.0")
+
 	compileOnly("org.projectlombok:lombok")
 	runtimeOnly("io.micrometer:micrometer-registry-prometheus")
 	runtimeOnly("org.postgresql:postgresql")

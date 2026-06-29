@@ -2,6 +2,7 @@ package ru.delmark.dads.notifications.integration.telegram.handlers;
 
 import io.github.natanimn.telebof.BotContext;
 import io.github.natanimn.telebof.annotations.CallbackHandler;
+import io.github.natanimn.telebof.enums.ParseMode;
 import io.github.natanimn.telebof.requests.edit.EditMessageReplyMarkup;
 import io.github.natanimn.telebof.requests.edit.EditMessageText;
 import io.github.natanimn.telebof.spring.Bot;
@@ -64,7 +65,9 @@ public class QueryHandlers {
         }
 
         Integer messageId = callback.getMessage().getMessageId();
-        EditMessageText messageEdit = ctx.editMessageText(chatId, newMessage, messageId);
+        EditMessageText messageEdit = ctx
+                .editMessageText(chatId, newMessage, messageId)
+                .parseMode(ParseMode.MARKDOWNV2);
         if (markup != null) {
             messageEdit = messageEdit.replyMarkup(markup);
         }

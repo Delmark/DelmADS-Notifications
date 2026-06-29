@@ -13,6 +13,7 @@ import ru.delmark.dads.notifications.integration.telegram.TelegramService;
 import ru.delmark.dads.notifications.integration.telegram.dto.MessageConstants;
 import ru.delmark.dads.notifications.integration.telegram.dto.TelegramNotificationTopicsInfo;
 import ru.delmark.dads.notifications.integration.telegram.dto.TopicOps;
+import ru.delmark.dads.notifications.utils.MarkdownV2Escaper;
 
 import java.util.List;
 
@@ -45,7 +46,7 @@ public class CommonHandlerOperations {
                                 topic.isUserSubscribed()
                                         ? "✅ Подписан"
                                         : "❌ Не подписан",
-                                topic.getTopic()
+                                MarkdownV2Escaper.escape(topic.getTopic())
                         )
                 )
         );

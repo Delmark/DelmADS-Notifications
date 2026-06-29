@@ -12,6 +12,7 @@ import org.apache.commons.lang3.BooleanUtils;
 import ru.delmark.dads.notifications.integration.telegram.TelegramService;
 import ru.delmark.dads.notifications.integration.telegram.dto.MessageConstants;
 import ru.delmark.dads.notifications.integration.telegram.handlers.filters.BotMessageFilter;
+import ru.delmark.dads.notifications.utils.MarkdownV2Escaper;
 
 
 @Bot
@@ -26,7 +27,9 @@ public class MessageHandlers {
     public void startCommand(BotContext botContext, Message message) {
         ensureUserRegistered(message);
 
-        String startMessage = MessageConstants.getStartMessage(message.getFrom().getUsername());
+        String startMessage = MessageConstants.getStartMessage(
+                MarkdownV2Escaper.escape(message.getFrom().getUsername())
+        );
         SendMessage messageToSend = operations.buildBaseMessage(botContext, message.getChat().getId(), startMessage);
         messageToSend.replyMarkup(operations.buildDefaultMenuMarkup());
         messageToSend.exec();

@@ -7,6 +7,8 @@
     <resultMap id="notificationTopic" type="ru.delmark.dads.notifications.data.model.NotificationTopic">
         <id property="id" column="topic_id"/>
         <result property="name" column="name"/>
+        <result property="alias" column="alias"/>
+        <result property="description" column="description"/>
         <result property="minAccessLevel" column="min_access_level"/>
         <result property="createdAt" column="created_at"/>
     </resultMap>
@@ -15,21 +17,25 @@
         SELECT
             t.topic_id,
             t.name,
+            t.readable_alias as alias,
+            t.description,
             am.name as min_access_level,
             t.created_at
         FROM notification_topic t
         JOIN access_mode am on t.min_access_level = am.access_level
     </select>
 
-    <select id="getNotificationTopicByName" resultMap="notificationTopic">
+    <select id="getNotificationTopic" resultMap="notificationTopic">
         SELECT
             t.topic_id,
             t.name,
+            t.readable_alias as alias,
+            t.description,
             am.name as min_access_level,
             t.created_at
         FROM notification_topic t
         JOIN access_mode am on t.min_access_level = am.access_level
-        WHERE t.name = #{name}
+        WHERE t.name = #{topicKey} or t.readable_alias = #{topicKey}
     </select>
 
 </mapper>

@@ -7,6 +7,7 @@ import io.github.natanimn.telebof.types.keyboard.InlineKeyboardButton;
 import io.github.natanimn.telebof.types.keyboard.InlineKeyboardMarkup;
 import lombok.RequiredArgsConstructor;
 import org.apache.commons.collections4.CollectionUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.springframework.stereotype.Component;
 import ru.delmark.dads.notifications.exception.TelegramCommandHandleException;
 import ru.delmark.dads.notifications.integration.telegram.TelegramService;
@@ -40,16 +41,23 @@ public class CommonHandlerOperations {
     public String buildTopicListMessage(List<TelegramNotificationTopicsInfo> availableTopics) {
         StringBuilder messageText = new StringBuilder();
         messageText.append("В данный момент список всех рассылок: \n");
-        availableTopics.forEach(topic ->
-                messageText.append(
-                        "\n%s \\- %s".formatted(
-                                topic.isUserSubscribed()
-                                        ? "✅ Подписан"
-                                        : "❌ Не подписан",
-                                MarkdownV2Escaper.escape(topic.getTopic())
-                        )
-                )
-        );
+        availableTopics.forEach(topic -> {
+            messageText.append(
+                    "\n%s \\- %s".formatted(
+                            topic.isUserSubscribed()
+                                    ? "✅ Подписан"
+                                    : "❌ Не подписан",
+                            MarkdownV2Escaper.escape(topic.getAlias())
+                    )
+            );
+            if (StringUtils.isNotBlank(topic.getTopic())) {
+                messageText.append(" \\(%s\\) "
+                        .formatted(MarkdownV2Escaper.escape(topic.getTopic())));
+            }
+            if (StringUtils.isNotBlank(topic.getDescription())) {
+                messageText.append(" \\- ").append(MarkdownV2Escaper.escape(topic.getDescription()));
+            }
+        });
         return messageText.toString();
     }
 

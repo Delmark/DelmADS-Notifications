@@ -10,5 +10,7 @@ import lombok.experimental.FieldDefaults;
 @AllArgsConstructor
 public class TelegramNotificationTopicsInfo {
     String topic;
+    String alias;
+    String description;
     boolean isUserSubscribed;
 }

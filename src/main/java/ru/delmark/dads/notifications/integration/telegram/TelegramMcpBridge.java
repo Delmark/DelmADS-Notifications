@@ -37,7 +37,7 @@ public class TelegramMcpBridge {
 
     public McpResponse sendNotification(MessageNotificationRequest request) {
         NotificationTopic topic = notificationTopicDAO
-                .getNotificationTopicByName(request.getNotificationTopic())
+                .getNotificationTopic(request.getNotificationTopic())
                 .orElseThrow(() -> new McpEventHandleException("Notification topic not found"));
 
         List<Long> chatsForSend = chatDAO.getChatIdsForTopicNotificationSend(topic.getName());

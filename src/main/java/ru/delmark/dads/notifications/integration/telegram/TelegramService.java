@@ -72,6 +72,8 @@ public class TelegramService {
                 .map(topic ->
                         new TelegramNotificationTopicsInfo(
                                 topic.getName(),
+                                topic.getAlias(),
+                                topic.getDescription(),
                                 userSubs.contains(topic.getId())
                         )
                 )
@@ -118,7 +120,7 @@ public class TelegramService {
     }
 
     private NotificationTopic getTopic(String topicName) {
-        return notificationTopicDAO.getNotificationTopicByName(topicName)
+        return notificationTopicDAO.getNotificationTopic(topicName)
                 .orElseThrow(() -> new TelegramCommandHandleException("Указанный тэг рассылки не найден"));
     }
 

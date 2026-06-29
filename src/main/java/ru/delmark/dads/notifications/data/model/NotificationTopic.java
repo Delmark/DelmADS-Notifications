@@ -8,6 +8,8 @@ import java.time.OffsetDateTime;
 public class NotificationTopic {
     Long id;
     String name;
+    String alias;
+    String description;
     AccessMode minAccessLevel;
     OffsetDateTime createdAt;
 }

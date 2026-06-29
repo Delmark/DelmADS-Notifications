@@ -50,8 +50,8 @@ public class QueryHandlers {
         Long chatId = callback.getMessage().getChat().getId();
         Long userId = callback.getFrom().getId();
         switch (operation) {
-            case SUBSCRIBE   -> ops.subscribeToTopic(ctx, topicTag, chatId, userId);
-            case UNSUBSCRIBE -> ops.unsubscribeFromTopic(ctx, topicTag, chatId, userId);
+            case SUBSCRIBE   -> ops.subscribeToTopic(ctx, topicTag, chatId, userId, false);
+            case UNSUBSCRIBE -> ops.unsubscribeFromTopic(ctx, topicTag, chatId, userId, false);
         }
 
         // обновляем старое сообщение

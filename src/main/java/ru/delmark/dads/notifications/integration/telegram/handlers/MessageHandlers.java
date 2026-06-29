@@ -65,7 +65,7 @@ public class MessageHandlers {
         User user = message.getFrom();
         String topicName = message.getText().replaceFirst("/subscribe", "").trim();
         Long chatId = message.getChat().getId();
-        operations.subscribeToTopic(botContext, topicName, chatId, user.getId());
+        operations.subscribeToTopic(botContext, topicName, chatId, user.getId(), true);
     }
 
     @MessageHandler(commands = "unsubscribe", filter = BotMessageFilter.class, priority = 1)
@@ -74,7 +74,7 @@ public class MessageHandlers {
         User user = message.getFrom();
         String topicName = message.getText().replaceFirst("/unsubscribe", "").trim();
         Long chatId = message.getChat().getId();
-        operations.unsubscribeFromTopic(botContext, topicName, chatId, user.getId());
+        operations.unsubscribeFromTopic(botContext, topicName, chatId, user.getId(), true);
     }
 
     private void ensureUserRegistered(Message message) {

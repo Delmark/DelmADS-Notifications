@@ -80,20 +80,24 @@ public class CommonHandlerOperations {
         messageToSend.exec();
     }
 
-    public void subscribeToTopic(BotContext ctx, String topicName, Long chatId, Long userId) {
+    public void subscribeToTopic(BotContext ctx, String topicName, Long chatId, Long userId, boolean sendNotification) {
         try {
             telegramService.subscribeToNotification(topicName, userId);
-            ctx.sendMessage(chatId, "Успешно подписались на %s".formatted(topicName)).exec();
+            if (sendNotification) {
+                ctx.sendMessage(chatId, "Успешно подписались на %s".formatted(topicName)).exec();
+            }
         } catch (TelegramCommandHandleException e) {
             String errorMessage = "Произошла ошибка %s".formatted(e.getMessage());
             ctx.sendMessage(chatId, errorMessage).exec();
         }
     }
 
-    public void unsubscribeFromTopic(BotContext ctx, String topicName, Long chatId, Long userId) {
+    public void unsubscribeFromTopic(BotContext ctx, String topicName, Long chatId, Long userId, boolean sendNotification) {
         try {
             telegramService.unsubscribeFromNotification(topicName, userId);
-            ctx.sendMessage(chatId, "Успешно отписались от %s".formatted(topicName)).exec();
+            if (sendNotification) {
+                ctx.sendMessage(chatId, "Успешно отписались от %s".formatted(topicName)).exec();
+            }
         } catch (TelegramCommandHandleException e) {
             String errorMessage = "Произошла ошибка %s".formatted(e.getMessage());
             ctx.sendMessage(chatId, errorMessage).exec();

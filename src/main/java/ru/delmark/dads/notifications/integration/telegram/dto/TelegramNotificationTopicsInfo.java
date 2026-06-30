@@ -12,5 +12,6 @@ public class TelegramNotificationTopicsInfo {
     String topic;
     String alias;
     String description;
+    Float displayPriority;
     boolean isUserSubscribed;
 }

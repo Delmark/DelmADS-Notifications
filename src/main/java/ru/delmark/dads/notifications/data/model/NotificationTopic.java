@@ -10,6 +10,7 @@ public class NotificationTopic {
     String name;
     String alias;
     String description;
+    Float displayPriority;
     AccessMode minAccessLevel;
     OffsetDateTime createdAt;
 }

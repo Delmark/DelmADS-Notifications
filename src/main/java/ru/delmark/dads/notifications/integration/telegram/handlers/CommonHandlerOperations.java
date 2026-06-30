@@ -16,6 +16,7 @@ import ru.delmark.dads.notifications.integration.telegram.dto.TelegramNotificati
 import ru.delmark.dads.notifications.integration.telegram.dto.TopicOps;
 import ru.delmark.dads.notifications.utils.MarkdownV2Escaper;
 
+import java.util.Comparator;
 import java.util.List;
 
 @Component
@@ -27,6 +28,15 @@ public class CommonHandlerOperations {
     public void sendUserTopicActions(BotContext ctx, Long chatId, Long userId) {
         List<TelegramNotificationTopicsInfo> availableTopics =
                 telegramService.getNotificationTopics(userId);
+        availableTopics.sort(Comparator
+                .comparing(TelegramNotificationTopicsInfo::getDisplayPriority).reversed()
+                .thenComparing(topicInfo ->
+                        StringUtils.firstNonEmpty(
+                                topicInfo.getAlias(),
+                                topicInfo.getTopic()
+                        ).length()
+                )
+        );
 
         if (CollectionUtils.isEmpty(availableTopics)) {
             ctx.sendMessage(chatId,"К сожалению, на данный момент нет рассылок на которые вы можете подписаться").exec();
@@ -68,7 +78,7 @@ public class CommonHandlerOperations {
                 availableTopics.stream()
                         .map(topic -> {
                             String action = topic.isUserSubscribed() ? "❌ отписаться" : "✍️ подписаться";
-                            String buttonText = "%s - %s".formatted(topic.getTopic(), action);
+                            String buttonText = "%s - %s".formatted(topic.getAlias(), action);
 
                             TopicOps topicOperation = topic.isUserSubscribed()
                                     ? TopicOps.UNSUBSCRIBE : TopicOps.SUBSCRIBE;

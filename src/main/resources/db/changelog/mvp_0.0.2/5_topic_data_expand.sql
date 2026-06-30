@@ -27,3 +27,6 @@ update notification_topic set readable_alias = '' where notification_topic.reada
 
 --changeset delmark:set-not-null-alias
 alter table notification_topic alter column readable_alias set not null;
+
+--changeset delmark:topic-priority
+alter table notification_topic add column display_priority numeric not null default 1;

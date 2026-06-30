@@ -9,32 +9,36 @@
         <result property="name" column="name"/>
         <result property="alias" column="alias"/>
         <result property="description" column="description"/>
+        <result property="displayPriority" column="display_priority"/>
         <result property="minAccessLevel" column="min_access_level"/>
         <result property="createdAt" column="created_at"/>
     </resultMap>
 
-    <select id="getNotificationTopics" resultMap="notificationTopic">
-        SELECT
-            t.topic_id,
-            t.name,
-            t.readable_alias as alias,
-            t.description,
-            am.name as min_access_level,
-            t.created_at
+    <sql id="baseSelect">
+        t.topic_id,
+        t.name,
+        t.readable_alias as alias,
+        t.description,
+        t.display_priority,
+        am.name as min_access_level,
+        t.created_at
+    </sql>
+
+    <sql id="baseFrom">
         FROM notification_topic t
         JOIN access_mode am on t.min_access_level = am.access_level
+    </sql>
+
+    <select id="getNotificationTopics" resultMap="notificationTopic">
+        SELECT
+        <include refid="baseSelect"/>
+        <include refid="baseFrom"/>
     </select>
 
     <select id="getNotificationTopic" resultMap="notificationTopic">
         SELECT
-            t.topic_id,
-            t.name,
-            t.readable_alias as alias,
-            t.description,
-            am.name as min_access_level,
-            t.created_at
-        FROM notification_topic t
-        JOIN access_mode am on t.min_access_level = am.access_level
+        <include refid="baseSelect"/>
+        <include refid="baseFrom"/>
         WHERE t.name = #{topicKey} or t.readable_alias = #{topicKey}
     </select>
 

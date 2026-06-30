@@ -74,6 +74,7 @@ public class TelegramService {
                                 topic.getName(),
                                 topic.getAlias(),
                                 topic.getDescription(),
+                                topic.getDisplayPriority(),
                                 userSubs.contains(topic.getId())
                         )
                 )

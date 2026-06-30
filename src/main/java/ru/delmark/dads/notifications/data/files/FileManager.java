@@ -73,9 +73,9 @@ public class FileManager {
         String fileId = UUID.randomUUID().toString();
 
         String fileName = multipartFile.getOriginalFilename();
-        int formatStartIndex = (fileName != null) ? fileName.lastIndexOf(".") : -1;
-        if (formatStartIndex != -1 && formatStartIndex < fileName.length()) {
-            fileId = fileId.concat(fileId.substring(formatStartIndex + 1));
+        int dotIndex = (fileName != null) ? fileName.lastIndexOf(".") : -1;
+        if (dotIndex > 0 && dotIndex < fileName.length() - 1) {
+            fileId = fileId.concat(fileId.substring(dotIndex));
         }
 
         Path savePath = fileRepo.resolve(fileId);

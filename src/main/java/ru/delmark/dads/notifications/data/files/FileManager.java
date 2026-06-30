@@ -3,9 +3,12 @@ package ru.delmark.dads.notifications.data.files;
 import lombok.RequiredArgsConstructor;
 import lombok.SneakyThrows;
 import org.apache.commons.collections4.CollectionUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
+import org.springframework.web.server.ResponseStatusException;
 import ru.delmark.dads.notifications.exception.LocalFileExtractException;
 
 import java.io.File;
@@ -68,6 +71,13 @@ public class FileManager {
         }
 
         String fileId = UUID.randomUUID().toString();
+
+        String fileName = multipartFile.getOriginalFilename();
+        int formatStartIndex = (fileName != null) ? fileName.lastIndexOf(".") : -1;
+        if (formatStartIndex != -1 && formatStartIndex < fileName.length()) {
+            fileId = fileId.concat(fileId.substring(formatStartIndex + 1));
+        }
+
         Path savePath = fileRepo.resolve(fileId);
         try (InputStream inputStream = multipartFile.getInputStream()) {
             Files.copy(inputStream, savePath, StandardCopyOption.REPLACE_EXISTING);

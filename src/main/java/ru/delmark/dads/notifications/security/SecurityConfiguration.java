@@ -44,9 +44,8 @@ public class SecurityConfiguration {
         return authentication -> {
             BearerTokenAuthenticationToken bearerTokenAuthentication = (BearerTokenAuthenticationToken) authentication;
             String givenToken = bearerTokenAuthentication.getToken();
-            if (StringUtils.isBlank(givenToken) || Objects.equals(givenToken, apiToken)) {
+            if (StringUtils.isBlank(givenToken) || !Objects.equals(givenToken, apiToken)) {
                 authentication.setAuthenticated(false);
-                throw new AccessDeniedException("You doesn't have access to this resource");
             }
             authentication.setAuthenticated(true);
             return authentication;

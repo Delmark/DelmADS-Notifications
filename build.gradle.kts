@@ -5,7 +5,7 @@ plugins {
 }
 
 group = "ru.delmark.dads"
-version = "0.0.1"
+version = "0.0.2"
 
 java {
 	toolchain {
@@ -23,6 +23,8 @@ dependencies {
 	implementation("org.springframework.boot:spring-boot-starter-actuator")
 	implementation("org.springframework.boot:spring-boot-starter-webmvc")
 	implementation("org.springframework.boot:spring-boot-starter-cache")
+	implementation("org.springframework.boot:spring-boot-starter-security")
+	implementation("org.springframework.boot:spring-boot-starter-oauth2-resource-server")
 
 	implementation("org.mybatis.spring.boot:mybatis-spring-boot-starter:4.0.1")
 	implementation("org.springframework.ai:spring-ai-starter-mcp-server-webmvc")

@@ -24,7 +24,8 @@ create trigger trg_topic_alias_check before insert or update on notification_top
 --changeset delmark:delmark-alias-default-update
 -- таких случаев быть не должно так как алиасы создаются в одном прогоне миграций
 -- однако на всякий случай прогоняю этот скрипт
-update notification_topic set readable_alias = concat(name,'_alias') where notification_topic.readable_alias is null;
+update notification_topic set readable_alias = concat(name, '_alias_', topic_id)
+                          where notification_topic.readable_alias is null;
 
 --changeset delmark:set-not-null-alias
 alter table notification_topic alter column readable_alias set not null;

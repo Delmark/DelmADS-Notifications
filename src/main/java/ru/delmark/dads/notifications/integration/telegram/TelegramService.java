@@ -2,6 +2,7 @@ package ru.delmark.dads.notifications.integration.telegram;
 
 import lombok.RequiredArgsConstructor;
 import org.apache.commons.collections4.CollectionUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
 import ru.delmark.dads.notifications.data.model.AccessMode;
@@ -18,6 +19,7 @@ import ru.delmark.dads.notifications.integration.telegram.dto.TelegramNotificati
 
 import java.time.OffsetDateTime;
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.List;
 import java.util.Set;
 import java.util.function.Predicate;
@@ -57,6 +59,15 @@ public class TelegramService {
         );
     }
 
+    private static final Comparator<TelegramNotificationTopicsInfo> topicInfoComparator = Comparator
+            .comparing(TelegramNotificationTopicsInfo::getDisplayPriority).reversed()
+            .thenComparing(topicInfo ->
+                    StringUtils.firstNonEmpty(
+                            topicInfo.getAlias(),
+                            topicInfo.getTopic()
+                    ).length()
+            );
+
     public List<TelegramNotificationTopicsInfo> getNotificationTopics(Long userId) {
         BotUser user = getUser(userId);
 
@@ -72,9 +83,13 @@ public class TelegramService {
                 .map(topic ->
                         new TelegramNotificationTopicsInfo(
                                 topic.getName(),
+                                topic.getAlias(),
+                                topic.getDescription(),
+                                topic.getDisplayPriority(),
                                 userSubs.contains(topic.getId())
                         )
                 )
+                .sorted(topicInfoComparator)
                 .collect(Collectors.toList());
     }
 
@@ -118,7 +133,7 @@ public class TelegramService {
     }
 
     private NotificationTopic getTopic(String topicName) {
-        return notificationTopicDAO.getNotificationTopicByName(topicName)
+        return notificationTopicDAO.getNotificationTopic(topicName)
                 .orElseThrow(() -> new TelegramCommandHandleException("Указанный тэг рассылки не найден"));
     }
 

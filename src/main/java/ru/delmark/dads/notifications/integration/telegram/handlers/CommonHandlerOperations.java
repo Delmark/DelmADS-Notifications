@@ -7,6 +7,7 @@ import io.github.natanimn.telebof.types.keyboard.InlineKeyboardButton;
 import io.github.natanimn.telebof.types.keyboard.InlineKeyboardMarkup;
 import lombok.RequiredArgsConstructor;
 import org.apache.commons.collections4.CollectionUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.springframework.stereotype.Component;
 import ru.delmark.dads.notifications.exception.TelegramCommandHandleException;
 import ru.delmark.dads.notifications.integration.telegram.TelegramService;
@@ -15,6 +16,7 @@ import ru.delmark.dads.notifications.integration.telegram.dto.TelegramNotificati
 import ru.delmark.dads.notifications.integration.telegram.dto.TopicOps;
 import ru.delmark.dads.notifications.utils.MarkdownV2Escaper;
 
+import java.util.Comparator;
 import java.util.List;
 
 @Component
@@ -24,8 +26,7 @@ public class CommonHandlerOperations {
     private final TelegramService telegramService;
 
     public void sendUserTopicActions(BotContext ctx, Long chatId, Long userId) {
-        List<TelegramNotificationTopicsInfo> availableTopics =
-                telegramService.getNotificationTopics(userId);
+        List<TelegramNotificationTopicsInfo> availableTopics = telegramService.getNotificationTopics(userId);
 
         if (CollectionUtils.isEmpty(availableTopics)) {
             ctx.sendMessage(chatId,"К сожалению, на данный момент нет рассылок на которые вы можете подписаться").exec();
@@ -39,17 +40,24 @@ public class CommonHandlerOperations {
 
     public String buildTopicListMessage(List<TelegramNotificationTopicsInfo> availableTopics) {
         StringBuilder messageText = new StringBuilder();
-        messageText.append("В данный момент список всех рассылок: \n");
-        availableTopics.forEach(topic ->
-                messageText.append(
-                        "\n%s \\- %s".formatted(
-                                topic.isUserSubscribed()
-                                        ? "✅ Подписан"
-                                        : "❌ Не подписан",
-                                MarkdownV2Escaper.escape(topic.getTopic())
-                        )
-                )
-        );
+        messageText.append("Предоставлен следующий список доступных рассылок в формате *Название \\- Статус \\- Тэг*: \n");
+        availableTopics.forEach(topic -> {
+            messageText.append(
+                    "\n%s \\- %s".formatted(
+                            topic.isUserSubscribed()
+                                    ? "✅ Подписан"
+                                    : "❌ Не подписан",
+                            MarkdownV2Escaper.escape(topic.getAlias())
+                    )
+            );
+            if (StringUtils.isNotBlank(topic.getTopic())) {
+                messageText.append(" \\(%s\\) "
+                        .formatted(MarkdownV2Escaper.escape(topic.getTopic())));
+            }
+            if (StringUtils.isNotBlank(topic.getDescription())) {
+                messageText.append(" \\- ").append(MarkdownV2Escaper.escape(topic.getDescription()));
+            }
+        });
         return messageText.toString();
     }
 
@@ -60,7 +68,7 @@ public class CommonHandlerOperations {
                 availableTopics.stream()
                         .map(topic -> {
                             String action = topic.isUserSubscribed() ? "❌ отписаться" : "✍️ подписаться";
-                            String buttonText = "%s - %s".formatted(topic.getTopic(), action);
+                            String buttonText = "%s - %s".formatted(topic.getAlias(), action);
 
                             TopicOps topicOperation = topic.isUserSubscribed()
                                     ? TopicOps.UNSUBSCRIBE : TopicOps.SUBSCRIBE;

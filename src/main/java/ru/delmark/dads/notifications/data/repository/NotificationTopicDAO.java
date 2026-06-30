@@ -9,5 +9,5 @@ import java.util.Optional;
 @Mapper
 public interface NotificationTopicDAO {
     List<NotificationTopic> getNotificationTopics();
-    Optional<NotificationTopic> getNotificationTopicByName(String topicName);
+    Optional<NotificationTopic> getNotificationTopic(String topicKey);
 }

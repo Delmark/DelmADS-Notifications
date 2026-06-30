@@ -44,8 +44,7 @@ public class SecurityConfiguration {
         return authentication -> {
             BearerTokenAuthenticationToken bearerTokenAuthentication = (BearerTokenAuthenticationToken) authentication;
             String givenToken = bearerTokenAuthentication.getToken();
-            boolean authorize = StringUtils.isBlank(givenToken) || !Objects.equals(givenToken, apiToken);
-            authentication.setAuthenticated(authorize);
+            authentication.setAuthenticated(Objects.equals(givenToken, apiToken));
             return authentication;
         };
     }

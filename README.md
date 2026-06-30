@@ -19,16 +19,20 @@ MCP-сервер на Spring Boot для отправки уведомлений
 
 ## Конфигурация
 
-Все секреты задаются через переменные окружения (файл `.env`, в репозиторий **не**
-коммитится — он в `.gitignore`).
+Все секреты задаются через переменные окружения (`.env` файл)
+Необходимо задать токен телеграм бота, указать учётные данные
+БД и ввести произвольный Bearer Token который будет использоваться
+для авторизации ии-агента при использовании MCP инструментов 
+и API эндпойнтов.
 
-| Переменная     | Назначение                |
-|----------------|---------------------------|
-| `TG_BOT_TOKEN` | токен Telegram-бота       |
-| `DB_ADDRESS`   | `host:port` PostgreSQL    |
-| `DB_NAME`      | имя базы данных           |
-| `DB_USER`      | пользователь БД           |
-| `DB_PASSWORD`  | пароль БД                 |
+| Переменная     | Назначение             |
+|----------------|------------------------|
+| `TG_BOT_TOKEN` | токен Telegram-бота    |
+| `DB_ADDRESS`   | `host:port` PostgreSQL |
+| `DB_NAME`      | имя базы данных        |
+| `DB_USER`      | пользователь БД        |
+| `DB_PASSWORD`  | пароль БД              |
+| `X_API_KEY`    | произвольный API ключ  |
 
 Пример `.env`:
 
@@ -38,17 +42,42 @@ DB_ADDRESS=localhost:5432
 DB_NAME=dads_notifications
 DB_USER=postgres
 DB_PASSWORD=postgres
+X_API_KEY=48588redlfkkensavy34885911399330ldsa3m435m6=
 ```
 
 ## Запуск
 
+### Локально (Gradle wrapper)
+
+Для запуска приложения необходим JDK 22 и установленный Gradle.
+
 ```bash
-./gradlew bootRun     # запустить локально
-./gradlew build       # собрать и прогнать тесты
+./gradlew bootJar
+
+./gradlew bootRun
+
+java -jar build/libs/notifications-0.0.2.jar
 ```
 
-По умолчанию в данный момент сервер работает в режиме **MCP stdio** (`spring.ai.mcp.server.stdio=true`):
-его запускает MCP-клиент, общение идёт по stdin/stdout.
+Сервис стартует на `http://localhost:8080`
+
+### Docker
+
+Сборка образа:
+```bash
+docker build -t dads-notifications:0.0.2 .
+```
+
+Запуск образа
+```
+docker run --rm -p 8080:8080 \
+  --env-file .env \
+  -v dads_files:/data/files \
+  dads-notifications:0.0.2
+```
+
+Том `/data/files` - каталог для загружаемых файлов (`file.upload.directory`),
+вынесен наружу, чтобы файлы переживали пересоздание контейнера
 
 ## Разработка
 

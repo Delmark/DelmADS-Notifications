@@ -18,7 +18,7 @@ create or replace function validate_alias() returns trigger as $alias_trg$
 $alias_trg$ language plpgsql;
 
 --changeset delmark:alias-trigger-create
-create trigger trg_topic_alias_check before insert or update on notification_topic
+create or replace trigger trg_topic_alias_check before insert or update on notification_topic
     for each row execute function validate_alias();
 
 --changeset delmark:delmark-alias-default-update

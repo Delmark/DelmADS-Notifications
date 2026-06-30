@@ -61,5 +61,5 @@ create or replace function check_user_notif_access() returns trigger as $notif_a
 $notif_access_check$ language plpgsql;
 
 --changeset delmark:notif-access-trigger
-create trigger trg_notif_access_check before insert or update on notification_subscriptions
+create or replace trigger trg_notif_access_check before insert or update on notification_subscriptions
     for each row execute function check_user_notif_access();

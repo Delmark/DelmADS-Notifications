@@ -26,17 +26,7 @@ public class CommonHandlerOperations {
     private final TelegramService telegramService;
 
     public void sendUserTopicActions(BotContext ctx, Long chatId, Long userId) {
-        List<TelegramNotificationTopicsInfo> availableTopics =
-                telegramService.getNotificationTopics(userId);
-        availableTopics.sort(Comparator
-                .comparing(TelegramNotificationTopicsInfo::getDisplayPriority).reversed()
-                .thenComparing(topicInfo ->
-                        StringUtils.firstNonEmpty(
-                                topicInfo.getAlias(),
-                                topicInfo.getTopic()
-                        ).length()
-                )
-        );
+        List<TelegramNotificationTopicsInfo> availableTopics = telegramService.getNotificationTopics(userId);
 
         if (CollectionUtils.isEmpty(availableTopics)) {
             ctx.sendMessage(chatId,"К сожалению, на данный момент нет рассылок на которые вы можете подписаться").exec();
@@ -50,7 +40,7 @@ public class CommonHandlerOperations {
 
     public String buildTopicListMessage(List<TelegramNotificationTopicsInfo> availableTopics) {
         StringBuilder messageText = new StringBuilder();
-        messageText.append("В данный момент список всех рассылок: \n");
+        messageText.append("Предоставлен следующий список доступных рассылок в формате *Название \\- Статус \\- Тэг*: \n");
         availableTopics.forEach(topic -> {
             messageText.append(
                     "\n%s \\- %s".formatted(

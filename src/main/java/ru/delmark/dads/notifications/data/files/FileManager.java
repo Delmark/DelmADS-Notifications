@@ -75,7 +75,7 @@ public class FileManager {
         String fileName = multipartFile.getOriginalFilename();
         int dotIndex = (fileName != null) ? fileName.lastIndexOf(".") : -1;
         if (dotIndex > 0 && dotIndex < fileName.length() - 1) {
-            fileId = fileId.concat(fileId.substring(dotIndex));
+            fileId = fileId.concat(fileName.substring(dotIndex));
         }
 
         Path savePath = fileRepo.resolve(fileId);

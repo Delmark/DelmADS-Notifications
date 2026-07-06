@@ -2,16 +2,15 @@ package ru.delmark.dads.notifications.data.files;
 
 import lombok.RequiredArgsConstructor;
 import lombok.SneakyThrows;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections4.CollectionUtils;
-import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
-import org.springframework.web.server.ResponseStatusException;
 import ru.delmark.dads.notifications.exception.LocalFileExtractException;
 
 import java.io.File;
+import java.io.IOException;
 import java.io.InputStream;
 import java.nio.file.Files;
 import java.nio.file.LinkOption;
@@ -27,6 +26,7 @@ import java.util.function.Predicate;
 
 @Service
 @RequiredArgsConstructor
+@Slf4j
 public class FileManager {
 
     @Value("${file.upload.directory:/data/files}")
@@ -38,7 +38,7 @@ public class FileManager {
     @Value("${file.ttl:1d}")
     private Duration fileTTL;
 
-    public File getLocalFile(String localFilePath) {
+    public Optional<File> getLocalFile(String localFilePath) {
         if (CollectionUtils.isEmpty(mcpRoots)) {
             throw new LocalFileExtractException("MCP roots not specified, for local file resolving" +
                     " you need to create and specify roots directories");
@@ -53,14 +53,24 @@ public class FileManager {
             throw new LocalFileExtractException("Local file is outside configured MCP roots or does not exist");
         }
 
-        return requestPath.toFile();
+        return Optional.of(requestPath.toFile());
     }
 
-    public File getServerFile(String fileUUID) {
-        Path serverFilePath = Paths.get(filePath, fileUUID);
-        return (Files.exists(serverFilePath))
-                ? serverFilePath.toFile()
-                : null;
+    public Optional<File> getServerFile(String fileUUID) {
+        try {
+            Path baseDir = Paths.get(filePath).toAbsolutePath().normalize();
+            Path candidate = baseDir.resolve(fileUUID).normalize();
+
+            if (!candidate.startsWith(baseDir)) {
+                log.warn("Attempt to access file outside of server storage directory: {}", fileUUID);
+                return Optional.empty();
+            }
+
+            return Optional.of(candidate.toRealPath(LinkOption.NOFOLLOW_LINKS).toFile());
+        } catch (IOException e) {
+            log.error("Failed to extract server file", e);
+            return Optional.empty();
+        }
     }
 
     @SneakyThrows

@@ -21,6 +21,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import java.util.Optional;
 import java.util.function.Function;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
@@ -93,10 +94,10 @@ public class TelegramMcpBridge {
     }
 
     // input -> chatId
-    private Function<Long, IdentifiableDocument> createFileDocumentForSend(BotContext context, Supplier<File> fileSupplier) {
+    private Function<Long, IdentifiableDocument> createFileDocumentForSend(BotContext context, Supplier<Optional<File>> fileSupplier) {
         return chatId -> {
-            File documentFile = fileSupplier.get();
-            SendDocument sendDoc = (documentFile != null) ? context.sendDocument(chatId, documentFile) : null;
+            Optional<File> documentFile = fileSupplier.get();
+            SendDocument sendDoc = documentFile.map(file -> context.sendDocument(chatId, file)).orElse(null);
             return new IdentifiableDocument(chatId, sendDoc);
         };
     }

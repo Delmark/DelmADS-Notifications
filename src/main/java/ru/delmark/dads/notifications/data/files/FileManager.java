@@ -58,13 +58,17 @@ public class FileManager {
 
     public Optional<File> getServerFile(String fileUUID) {
         try {
-            return Optional.of(
-                    Paths.get(filePath, fileUUID)
-                            .toRealPath(LinkOption.NOFOLLOW_LINKS)
-                            .toFile()
-            );
+            Path baseDir = Paths.get(filePath).toAbsolutePath().normalize();
+            Path candidate = baseDir.resolve(fileUUID).normalize();
+
+            if (!candidate.startsWith(baseDir)) {
+                log.warn("Attempt to access file outside of server storage directory: {}", fileUUID);
+                return Optional.empty();
+            }
+
+            return Optional.of(candidate.toRealPath(LinkOption.NOFOLLOW_LINKS).toFile());
         } catch (IOException e) {
-            log.error("Failed to extract local file", e);
+            log.error("Failed to extract server file", e);
             return Optional.empty();
         }
     }

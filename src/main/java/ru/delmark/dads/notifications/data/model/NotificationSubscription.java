@@ -10,5 +10,6 @@ import java.time.OffsetDateTime;
 public class NotificationSubscription {
     Long userId;
     Long topicId;
+    Boolean silentMode;
     OffsetDateTime createdAt;
 }

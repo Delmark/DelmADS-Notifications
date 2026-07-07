@@ -5,7 +5,6 @@
 <mapper namespace="ru.delmark.dads.notifications.data.repository.ChatDAO">
 
 
-
     <select id="chatExists" resultType="boolean">
         SELECT EXISTS (
             SELECT
@@ -16,14 +15,16 @@
         )
     </select>
 
-    <select id="getChatIdsForTopicNotificationSend" resultType="java.lang.Long">
-        SELECT DISTINCT
-            c.chat_id
+    <select id="getRecipientChatsForNotification" resultType="ru.delmark.dads.notifications.data.dto.NotificationRecipientChat">
+        SELECT DISTINCT ON (c.chat_id)
+            c.chat_id,
+            ns.silent_mode as silent_send
         FROM user_chats c
         JOIN public.bot_user bu on c.user_id = bu.id
         JOIN public.notification_subscriptions ns on bu.id = ns.user_id
         JOIN public.notification_topic nt on ns.topic_id = nt.topic_id
         WHERE nt.name = #{topicName} AND bu.access_level >= nt.min_access_level
+        ORDER BY ns.silent_mode DESC
     </select>
 
     <insert id="insertChat">

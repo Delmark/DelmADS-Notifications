@@ -9,14 +9,15 @@
         SELECT
             user_id,
             topic_id,
+            silent_mode,
             created_at
         FROM notification_subscriptions
         WHERE user_id = #{userId}
     </select>
 
     <insert id="subscribe">
-        INSERT INTO notification_subscriptions (user_id, topic_id)
-        VALUES (#{userId}, #{topicId})
+        INSERT INTO notification_subscriptions (user_id, topic_id, silent_mode)
+        VALUES (#{userId}, #{topicId}, #{silentMode})
         ON CONFLICT (user_id, topic_id) DO NOTHING
     </insert>
 

@@ -14,5 +14,6 @@ public class BotUser {
     Long id;
     String username;
     AccessMode accessLevel;
+    Boolean preferredSilentMode;
     OffsetDateTime createdAt;
 }

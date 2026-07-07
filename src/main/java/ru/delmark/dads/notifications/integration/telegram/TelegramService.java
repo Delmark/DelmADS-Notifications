@@ -54,6 +54,7 @@ public class TelegramService {
                         userId,
                         username,
                         AccessMode.PUBLIC,
+                        false,
                         OffsetDateTime.now()
                 )
         );
@@ -115,6 +116,7 @@ public class TelegramService {
                 new NotificationSubscription(
                         user.getId(),
                         topic.getId(),
+                        user.getPreferredSilentMode(),
                         OffsetDateTime.now()
                 )
         );

@@ -10,6 +10,7 @@
             u.id,
             u.username,
             am.name as access_level,
+            u.preferred_silent_mode,
             u.created_at
         FROM bot_user u
         JOIN access_mode am ON u.access_level = am.access_level
@@ -17,8 +18,8 @@
     </select>
 
     <insert id="save">
-        INSERT INTO bot_user (id, username, access_level)
-        VALUES (#{id}, #{username}, #{accessLevel.level})
+        INSERT INTO bot_user (id, username, access_level, preferred_silent_mode)
+        VALUES (#{id}, #{username}, #{accessLevel.level}, false)
     </insert>
 
     <update id="updateUserAccess">

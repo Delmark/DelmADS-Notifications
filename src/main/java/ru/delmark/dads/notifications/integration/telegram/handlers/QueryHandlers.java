@@ -130,7 +130,11 @@ public class QueryHandlers {
         Long userId = callback.getFrom().getId();
 
         try {
-            openTopicSettings(ctx, topicId, userId, callback.getMessage().getChat().getId());
+            Message prevMessage = callback.getMessage();
+            TopicSettingsInfo settingsInfo = getTopicSettingsMessage(ctx, topicId, userId, prevMessage.getChat().getId());
+            SendMessage messageReq = ctx.sendMessage(prevMessage.getChat().getId(), settingsInfo.topicSettingsMessage());
+            messageReq.replyMarkup(buildTopicSettingsMarkup(settingsInfo.subscription()));
+            messageReq.exec();
         } catch (TelegramCommandHandleException e) {
             log.error(e.getMessage(), e);
             ctx.sendMessage(callback.getMessage().getChat().getId(), "Произошла непредвиденная ошибка: " + e.getMessage()).exec();
@@ -152,7 +156,16 @@ public class QueryHandlers {
         telegramService.updateSubscriptionSilentMode(topicId, userId, newSilentModeStatus);
 
         try {
-            openTopicSettings(ctx, topicId, userId, callback.getMessage().getChat().getId());
+            Message prevMessage = callback.getMessage();
+            TopicSettingsInfo info = getTopicSettingsMessage(ctx, topicId, userId, prevMessage.getChat().getId());
+
+            EditMessageText editMessageReq = ctx.editMessageText(
+                    prevMessage.getChat().getId(),
+                    info.topicSettingsMessage(),
+                    prevMessage.getMessageId()
+            );
+            editMessageReq.replyMarkup(buildTopicSettingsMarkup(info.subscription()));
+            editMessageReq.exec();
         } catch (TelegramCommandHandleException e) {
             log.error(e.getMessage(), e);
             ctx.sendMessage(callback.getMessage().getChat().getId(), "Произошла непредвиденная ошибка: " + e.getMessage());
@@ -161,7 +174,9 @@ public class QueryHandlers {
         }
     }
 
-    private void openTopicSettings(BotContext ctx, Long topicId, Long userId, Long recipientChatId) {
+    record TopicSettingsInfo(NotificationTopic topic, NotificationSubscription subscription, String topicSettingsMessage) {}
+
+    private TopicSettingsInfo getTopicSettingsMessage(BotContext ctx, Long topicId, Long userId, Long recipientChatId) {
         NotificationTopic topic = telegramService.getTopics(
                         NotificationTopicFilter.builder()
                                 .topicIds(Collections.singletonList(topicId))
@@ -175,9 +190,7 @@ public class QueryHandlers {
                 .findFirst().orElseThrow(() -> new TelegramCommandHandleException("Вы не подписаны на данную рассылку"));
 
         String message = MessageBuilder.getTopicSettings(topic, subscription);
-        SendMessage messageReq = ctx.sendMessage(recipientChatId, message);
-        messageReq.replyMarkup(buildTopicSettingsMarkup(subscription));
-        messageReq.exec();
+        return new TopicSettingsInfo(topic, subscription, message);
     }
 
     private InlineKeyboardMarkup buildTopicSettingsMarkup(NotificationSubscription subscription) {
@@ -187,7 +200,9 @@ public class QueryHandlers {
         String silentModeLabel = (subscription.getSilentMode()) ? "Выключить тихую отправку" : "Включить тихую отправку";
         String callbackPostfix = subscription.getTopicId() + "_" + !subscription.getSilentMode();
         inlineKeyboardMarkup.addKeyboard(
-                new InlineKeyboardButton(silentModeLabel, "topic_silent_mode_" + callbackPostfix)
+                new InlineKeyboardButton(silentModeLabel, "topic_silent_mode_" + callbackPostfix),
+                new InlineKeyboardButton("Вернутся в настройки", "settings"),
+                new InlineKeyboardButton("Вернутся в меню", "help_callback")
         );
 
         return inlineKeyboardMarkup;

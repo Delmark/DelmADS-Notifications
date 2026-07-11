@@ -38,8 +38,8 @@
                 t.topic_id = ANY(
                     <foreach collection="filter.getTopicIds()" item="id" separator="," open="ARRAY[" close="]">
                         #{id}
-                    </foreach>
-                )::int[]
+                    </foreach>::int[]
+                )
             </if>
         </where>
     </select>

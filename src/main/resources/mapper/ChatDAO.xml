@@ -24,7 +24,7 @@
         JOIN public.notification_subscriptions ns on bu.id = ns.user_id
         JOIN public.notification_topic nt on ns.topic_id = nt.topic_id
         WHERE nt.name = #{topicName} AND bu.access_level >= nt.min_access_level
-        ORDER BY ns.silent_mode DESC
+        ORDER BY c.chat_id, ns.silent_mode DESC
     </select>
 
     <insert id="insertChat">

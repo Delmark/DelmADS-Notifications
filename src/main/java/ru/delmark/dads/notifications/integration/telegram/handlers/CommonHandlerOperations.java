@@ -10,7 +10,6 @@ import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.stereotype.Component;
 import ru.delmark.dads.notifications.data.model.BotUser;
-import ru.delmark.dads.notifications.data.repository.BotUserDAO;
 import ru.delmark.dads.notifications.exception.TelegramCommandHandleException;
 import ru.delmark.dads.notifications.integration.telegram.TelegramService;
 import ru.delmark.dads.notifications.integration.telegram.MessageBuilder;
@@ -25,7 +24,6 @@ import java.util.List;
 public class CommonHandlerOperations {
 
     private final TelegramService telegramService;
-    private final BotUserDAO botUserDAO;
 
     public void sendUserTopicActions(BotContext ctx, Long chatId, Long userId) {
         List<TelegramNotificationTopicsInfo> availableTopics = telegramService.getNotificationTopics(userId);
@@ -115,8 +113,7 @@ public class CommonHandlerOperations {
     }
 
     public void openSettingsPanel(BotContext ctx, Long userId, Long recipientChatId) {
-        BotUser user = botUserDAO.findById(userId)
-                .orElseThrow(() -> new TelegramCommandHandleException("Произошла ошибка! Попробуйте позже."));
+        BotUser user = telegramService.getUser(userId);
         boolean userPreferredSilentMode = user.getPreferredSilentMode();
 
         String settingsMessage = MessageBuilder.getSettingsMessage(userPreferredSilentMode);
@@ -127,13 +124,13 @@ public class CommonHandlerOperations {
 
     public InlineKeyboardMarkup buildSettingsMarkup(boolean userPreferredSilentMode) {
         InlineKeyboardMarkup keyboardMarkup = new InlineKeyboardMarkup();
-        String globalSilentModeLabel = (userPreferredSilentMode)
+        String globalSilentModeLabel = (!userPreferredSilentMode)
                 ? "\uD83D\uDD07 Предпочитать тихую отправку уведомлений"
                 : "\uD83D\uDD0A Предпочитать отправку с push уведомлениями";
 
         keyboardMarkup.setRowWidth(1);
         keyboardMarkup.addKeyboard(
-                new InlineKeyboardButton(globalSilentModeLabel, "silent_mode_" + userPreferredSilentMode),
+                new InlineKeyboardButton(globalSilentModeLabel, "silent_mode_" + !userPreferredSilentMode),
                 new InlineKeyboardButton("Настройка получения рассылок", "topic_config")
         );
         return keyboardMarkup;

@@ -35,7 +35,7 @@
         <include refid="baseFrom"/>
         <where>
             <if test="filter.getTopicIds() != null and !filter.getTopicIds().isEmpty()">
-                t.id = ANY(
+                t.topic_id = ANY(
                     <foreach collection="filter.getTopicIds()" item="id" separator="," open="ARRAY[" close="]">
                         #{id}
                     </foreach>

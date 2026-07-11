@@ -18,8 +18,8 @@
     </select>
 
     <insert id="save">
-        INSERT INTO bot_user (id, username, access_level, preferred_silent_mode)
-        VALUES (#{id}, #{username}, #{accessLevel.level}, false)
+        INSERT INTO bot_user (id, username, access_level)
+        VALUES (#{id}, #{username}, #{accessLevel.level})
     </insert>
 
     <update id="updateUserAccess">

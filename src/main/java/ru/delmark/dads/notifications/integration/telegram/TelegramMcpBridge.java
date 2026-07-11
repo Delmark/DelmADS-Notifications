@@ -5,6 +5,7 @@ import io.github.natanimn.telebof.BotContext;
 import io.github.natanimn.telebof.requests.send.SendDocument;
 import io.github.natanimn.telebof.requests.send.SendMessage;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.stereotype.Component;
@@ -30,6 +31,7 @@ import java.util.stream.Stream;
 
 @Component
 @RequiredArgsConstructor
+@Slf4j
 public class TelegramMcpBridge {
 
     private final BotClient botClient;
@@ -77,7 +79,11 @@ public class TelegramMcpBridge {
             if (documentsForChats.containsKey(chatId)) {
                 documentsForChats.get(chatId).forEach(docSendRequest -> {
                     docSendRequest.disableNotification(recipientChat.getSilentSend());
-                    docSendRequest.exec();
+                    try {
+                        docSendRequest.exec();
+                    } catch (Exception e) {
+                        log.error("Document send failed", e);
+                    }
                 });
             }
         }

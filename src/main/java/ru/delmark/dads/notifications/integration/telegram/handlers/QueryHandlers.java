@@ -69,7 +69,7 @@ public class QueryHandlers {
 
         Long recipientChatId = callback.getMessage().getChat().getId();
         Set<NotificationSubscription> userSubs = telegramService.getUserSubscribedTopics(callback.getFrom().getId());
-        if (CollectionUtils.isNotEmpty(userSubs)) {
+        if (CollectionUtils.isEmpty(userSubs)) {
             ctx.sendMessage(recipientChatId, "Вы не подписаны на какие-либо рассылки").exec();
             ctx.answerCallbackQuery(callback.getId()).exec();
             return;
@@ -118,7 +118,7 @@ public class QueryHandlers {
 
         telegramService.updateUserSilentMode(user.getId(), newSilentModeStatus);
 
-        ctx.sendMessage(callback.getMessage().getChat().getId(), "Предпочитаемый режим отправки уведомлений обновлён");
+        ctx.sendMessage(callback.getMessage().getChat().getId(), "Предпочитаемый режим отправки уведомлений обновлён").exec();
         ctx.answerCallbackQuery(callback.getId()).exec();
     }
 
@@ -133,7 +133,7 @@ public class QueryHandlers {
             openTopicSettings(ctx, topicId, userId, callback.getMessage().getChat().getId());
         } catch (TelegramCommandHandleException e) {
             log.error(e.getMessage(), e);
-            ctx.sendMessage(callback.getMessage().getChat().getId(), "Произошла непредвиденная ошибка: " + e.getMessage());
+            ctx.sendMessage(callback.getMessage().getChat().getId(), "Произошла непредвиденная ошибка: " + e.getMessage()).exec();
         } finally {
             ctx.answerCallbackQuery(callback.getId()).exec();
         }

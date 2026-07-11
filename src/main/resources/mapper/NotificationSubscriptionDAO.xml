@@ -25,4 +25,10 @@
         DELETE FROM notification_subscriptions
         WHERE topic_id = #{topicId} AND user_id = #{userId}
     </delete>
+
+    <update id="updateSilentMode">
+        UPDATE notification_subscriptions
+        SET silent_mode = #{silent}
+        WHERE topic_id = #{topicId} AND user_id = #{userId}
+    </update>
 </mapper>

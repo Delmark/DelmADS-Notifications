@@ -27,4 +27,10 @@
         SET access_level = #{accessMode.level}
         WHERE id = #{userId}
     </update>
+
+    <update id="updateUserSilentMode">
+        UPDATE bot_user
+        SET preferred_silent_mode = #{silentMode}
+        WHERE id = #{userId}
+    </update>
 </mapper>

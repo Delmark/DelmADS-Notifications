@@ -10,4 +10,5 @@ public interface NotificationSubscriptionDAO {
     List<NotificationSubscription> findUserSubscriptions(Long userId);
     void subscribe(NotificationSubscription notificationSubscription);
     void unsubscribe(Long topicId, Long userId);
+    void updateSilentMode(Long userId, Long topicId, boolean silent);
 }

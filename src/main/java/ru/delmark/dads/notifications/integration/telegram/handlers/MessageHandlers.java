@@ -10,7 +10,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.BooleanUtils;
 import ru.delmark.dads.notifications.integration.telegram.TelegramService;
-import ru.delmark.dads.notifications.integration.telegram.dto.MessageConstants;
+import ru.delmark.dads.notifications.integration.telegram.MessageBuilder;
 import ru.delmark.dads.notifications.integration.telegram.handlers.filters.BotMessageFilter;
 import ru.delmark.dads.notifications.utils.MarkdownV2Escaper;
 
@@ -27,7 +27,7 @@ public class MessageHandlers {
     public void startCommand(BotContext botContext, Message message) {
         ensureUserRegistered(message);
 
-        String startMessage = MessageConstants.getStartMessage(
+        String startMessage = MessageBuilder.getStartMessage(
                 MarkdownV2Escaper.escape(message.getFrom().getUsername())
         );
         SendMessage messageToSend = operations.buildBaseMessage(botContext, message.getChat().getId(), startMessage);
@@ -57,6 +57,12 @@ public class MessageHandlers {
                 botContext, message.getChat().getId(),
                 message.getFrom().getId()
         );
+    }
+
+    @MessageHandler(commands = "settings", filter = BotMessageFilter.class, priority = 1)
+    public void settingsCommand(BotContext botContext, Message message) {
+        ensureUserRegistered(message);
+        operations.openSettingsPanel(botContext, message.getFrom().getId(), message.getChat().getId());
     }
 
     @MessageHandler(commands = "subscribe", filter = BotMessageFilter.class, priority = 1)

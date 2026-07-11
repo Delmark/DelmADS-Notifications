@@ -9,14 +9,15 @@ import lombok.RequiredArgsConstructor;
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.stereotype.Component;
+import ru.delmark.dads.notifications.data.model.BotUser;
+import ru.delmark.dads.notifications.data.repository.BotUserDAO;
 import ru.delmark.dads.notifications.exception.TelegramCommandHandleException;
 import ru.delmark.dads.notifications.integration.telegram.TelegramService;
-import ru.delmark.dads.notifications.integration.telegram.dto.MessageConstants;
+import ru.delmark.dads.notifications.integration.telegram.MessageBuilder;
 import ru.delmark.dads.notifications.integration.telegram.dto.TelegramNotificationTopicsInfo;
 import ru.delmark.dads.notifications.integration.telegram.dto.TopicOps;
 import ru.delmark.dads.notifications.utils.MarkdownV2Escaper;
 
-import java.util.Comparator;
 import java.util.List;
 
 @Component
@@ -24,6 +25,7 @@ import java.util.List;
 public class CommonHandlerOperations {
 
     private final TelegramService telegramService;
+    private final BotUserDAO botUserDAO;
 
     public void sendUserTopicActions(BotContext ctx, Long chatId, Long userId) {
         List<TelegramNotificationTopicsInfo> availableTopics = telegramService.getNotificationTopics(userId);
@@ -82,7 +84,7 @@ public class CommonHandlerOperations {
     }
 
     public void sendHelpMessage(BotContext ctx, Long chatId) {
-        String startMessage = MessageConstants.getHelpMessage();
+        String startMessage = MessageBuilder.getHelpMessage();
         SendMessage messageToSend = buildBaseMessage(ctx, chatId, startMessage);
         messageToSend.replyMarkup(buildDefaultMenuMarkup());
         messageToSend.exec();
@@ -112,12 +114,38 @@ public class CommonHandlerOperations {
         }
     }
 
+    public void openSettingsPanel(BotContext ctx, Long userId, Long recipientChatId) {
+        BotUser user = botUserDAO.findById(userId)
+                .orElseThrow(() -> new TelegramCommandHandleException("Произошла ошибка! Попробуйте позже."));
+        boolean userPreferredSilentMode = user.getPreferredSilentMode();
+
+        String settingsMessage = MessageBuilder.getSettingsMessage(userPreferredSilentMode);
+        SendMessage messageRequest = ctx.sendMessage(recipientChatId, settingsMessage);
+        messageRequest.replyMarkup(buildSettingsMarkup(userPreferredSilentMode));
+        messageRequest.exec();
+    }
+
+    public InlineKeyboardMarkup buildSettingsMarkup(boolean userPreferredSilentMode) {
+        InlineKeyboardMarkup keyboardMarkup = new InlineKeyboardMarkup();
+        String globalSilentModeLabel = (userPreferredSilentMode)
+                ? "\uD83D\uDD07 Предпочитать тихую отправку уведомлений"
+                : "\uD83D\uDD0A Предпочитать отправку с push уведомлениями";
+
+        keyboardMarkup.setRowWidth(1);
+        keyboardMarkup.addKeyboard(
+                new InlineKeyboardButton(globalSilentModeLabel, "silent_mode_" + userPreferredSilentMode),
+                new InlineKeyboardButton("Настройка получения рассылок", "topic_config")
+        );
+        return keyboardMarkup;
+    }
+
     public InlineKeyboardMarkup buildDefaultMenuMarkup() {
         InlineKeyboardMarkup menuMarkup = new InlineKeyboardMarkup();
         menuMarkup.setRowWidth(1);
         menuMarkup.addKeyboard(
                 new InlineKeyboardButton("Помощь", "help_callback"),
-                new InlineKeyboardButton("Список рассылок", "topic_list")
+                new InlineKeyboardButton("Список рассылок", "topic_list"),
+                new InlineKeyboardButton("Настройки", "settings")
         );
         return menuMarkup;
     }

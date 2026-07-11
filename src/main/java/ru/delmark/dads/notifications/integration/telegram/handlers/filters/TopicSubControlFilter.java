@@ -7,7 +7,7 @@ import ru.delmark.dads.notifications.integration.telegram.dto.TopicOps;
 
 import java.util.Optional;
 
-public class TopicSubsControlCallbackFilter implements CustomFilter {
+public class TopicSubControlFilter implements CustomFilter {
 
     @Override
     public boolean check(Update update) {

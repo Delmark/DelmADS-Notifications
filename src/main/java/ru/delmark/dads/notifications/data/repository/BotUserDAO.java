@@ -11,4 +11,5 @@ public interface BotUserDAO {
     Optional<BotUser> findById(Long userId);
     void save(BotUser botUser);
     void updateUserAccess(Long userId, AccessMode accessMode);
+    void updateUserSilentMode(Long userId, boolean silentMode);
 }

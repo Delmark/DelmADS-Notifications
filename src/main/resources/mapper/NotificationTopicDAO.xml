@@ -33,6 +33,15 @@
         SELECT
         <include refid="baseSelect"/>
         <include refid="baseFrom"/>
+        <where>
+            <if test="filter.getTopicIds() != null and !filter.getTopicIds().isEmpty()">
+                t.topic_id = ANY(
+                    <foreach collection="filter.getTopicIds()" item="id" separator="," open="ARRAY[" close="]">
+                        #{id}
+                    </foreach>::int[]
+                )
+            </if>
+        </where>
     </select>
 
     <select id="getNotificationTopic" resultMap="notificationTopic">

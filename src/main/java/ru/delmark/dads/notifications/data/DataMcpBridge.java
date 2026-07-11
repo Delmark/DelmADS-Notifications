@@ -2,6 +2,7 @@ package ru.delmark.dads.notifications.data;
 
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
+import ru.delmark.dads.notifications.data.dto.NotificationTopicFilter;
 import ru.delmark.dads.notifications.data.model.NotificationTopic;
 import ru.delmark.dads.notifications.data.repository.NotificationTopicDAO;
 import ru.delmark.dads.notifications.mcp.response.McpNotificationTopicListResponse;
@@ -19,7 +20,7 @@ public class DataMcpBridge {
             return new McpNotificationTopicListResponse(
                     "Success",
                     "Available notification topics is showed in response",
-                    topicDao.getNotificationTopics().stream().map(NotificationTopic::getName).toList()
+                    topicDao.getNotificationTopics(new NotificationTopicFilter()).stream().map(NotificationTopic::getName).toList()
             );
         } catch (Exception e) {
             return new McpNotificationTopicListResponse(

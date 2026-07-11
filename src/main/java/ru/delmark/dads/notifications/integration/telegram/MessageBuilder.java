@@ -1,9 +1,15 @@
-package ru.delmark.dads.notifications.integration.telegram.dto;
+package ru.delmark.dads.notifications.integration.telegram;
 
 import lombok.experimental.UtilityClass;
+import ru.delmark.dads.notifications.data.model.NotificationSubscription;
+import ru.delmark.dads.notifications.data.model.NotificationTopic;
+
+import java.time.format.DateTimeFormatter;
 
 @UtilityClass
-public class MessageConstants {
+public class MessageBuilder {
+
+    private final DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
 
     public String getStartMessage(String username) {
         return """
@@ -27,8 +33,32 @@ public class MessageConstants {
                 
                 Помощь \\(вы сейчас здесь\\!\\) /help
                 Список предоставляемых рассылок можно получить по команде: /list
+                Настроить рассылки \\(возможность тихой отправки\\): /settings
                 Подписаться на рассылку: /subscribe *\\<тег рассылки\\>*
                 Отписаться от рассылки: /unsubscribe *\\<тег рассылки\\>*
                 """;
+    }
+
+    public String getTopicSettings(NotificationTopic topic, NotificationSubscription userSubscription) {
+        return """
+                Настройки рассылки: %s (%s)
+                
+                Дата подписки: %s
+                
+                Тихая отправка сообщений для этой рассылки: %s
+                """.formatted(
+                        topic.getAlias(),
+                        topic.getName(),
+                        formatter.format(userSubscription.getCreatedAt()),
+                        userSubscription.getSilentMode() ? "вкл" : "выкл"
+                );
+    }
+
+    public String getSettingsMessage(boolean isGlobalSilentModeOn) {
+        return """
+                Настройки получения уведомлений:
+                
+                Предпочитать отправку сообщений без push уведомлений: %s
+                """.formatted((isGlobalSilentModeOn) ? "да" : "нет");
     }
 }

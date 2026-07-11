@@ -10,6 +10,7 @@
             u.id,
             u.username,
             am.name as access_level,
+            u.preferred_silent_mode,
             u.created_at
         FROM bot_user u
         JOIN access_mode am ON u.access_level = am.access_level
@@ -24,6 +25,12 @@
     <update id="updateUserAccess">
         UPDATE bot_user
         SET access_level = #{accessMode.level}
+        WHERE id = #{userId}
+    </update>
+
+    <update id="updateUserSilentMode">
+        UPDATE bot_user
+        SET preferred_silent_mode = #{silentMode}
         WHERE id = #{userId}
     </update>
 </mapper>

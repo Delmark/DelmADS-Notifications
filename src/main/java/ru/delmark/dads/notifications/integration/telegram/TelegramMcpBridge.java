@@ -3,10 +3,13 @@ package ru.delmark.dads.notifications.integration.telegram;
 import io.github.natanimn.telebof.BotClient;
 import io.github.natanimn.telebof.BotContext;
 import io.github.natanimn.telebof.requests.send.SendDocument;
+import io.github.natanimn.telebof.requests.send.SendMessage;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.stereotype.Component;
+import ru.delmark.dads.notifications.data.dto.NotificationRecipientChat;
 import ru.delmark.dads.notifications.data.files.FileManager;
 import ru.delmark.dads.notifications.data.model.NotificationTopic;
 import ru.delmark.dads.notifications.data.repository.ChatDAO;
@@ -29,6 +32,7 @@ import java.util.stream.Stream;
 
 @Component
 @RequiredArgsConstructor
+@Slf4j
 public class TelegramMcpBridge {
 
     private final BotClient botClient;
@@ -41,17 +45,21 @@ public class TelegramMcpBridge {
                 .getNotificationTopic(request.getNotificationTopic())
                 .orElseThrow(() -> new McpEventHandleException("Notification topic not found"));
 
-        List<Long> chatsForSend = chatDAO.getChatIdsForTopicNotificationSend(topic.getName());
-        if (CollectionUtils.isEmpty(chatsForSend)) {
+        List<NotificationRecipientChat> recipientChats = chatDAO.getRecipientChatsForNotification(topic.getName());
+        if (CollectionUtils.isEmpty(recipientChats)) {
             return new McpResponse(
                     "Success",
                     "Notification processed. Warning: Nobody actually was subscribed to this topic."
             );
         }
 
+        List<Long> chatsIds = recipientChats.stream()
+                .map(NotificationRecipientChat::getChatId)
+                .collect(Collectors.toList());
+
         Map<Long, List<SendDocument>> documentsForChats = new HashMap<>();
         if (CollectionUtils.isNotEmpty(request.getAttachedFiles())) {
-            documentsForChats = resolveTelegramDocs(chatsForSend, request.getAttachedFiles())
+            documentsForChats = resolveTelegramDocs(chatsIds, request.getAttachedFiles())
                     .stream().collect(Collectors.groupingBy(
                             IdentifiableDocument::chatId,
                             Collectors.mapping(
@@ -61,11 +69,23 @@ public class TelegramMcpBridge {
                     ));
         }
 
-        for (Long chatId : chatsForSend) {
+        for (NotificationRecipientChat recipientChat : recipientChats) {
+            Long chatId = recipientChat.getChatId();
+
             // сначала всегда отправляем текст, потом файлы
-            botClient.context.sendMessage(chatId, request.getMessage()).exec();
+            SendMessage messageRequest = botClient.context.sendMessage(chatId, request.getMessage());
+            messageRequest.disableNotification(recipientChat.getSilentSend());
+            messageRequest.exec();
+
             if (documentsForChats.containsKey(chatId)) {
-                documentsForChats.get(chatId).forEach(SendDocument::await);
+                documentsForChats.get(chatId).forEach(docSendRequest -> {
+                    docSendRequest.disableNotification(recipientChat.getSilentSend());
+                    try {
+                        docSendRequest.exec();
+                    } catch (Exception e) {
+                        log.error("Document send failed", e);
+                    }
+                });
             }
         }
 

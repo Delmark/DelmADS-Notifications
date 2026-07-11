@@ -1,6 +1,7 @@
 package ru.delmark.dads.notifications.data.repository;
 
 import org.apache.ibatis.annotations.Mapper;
+import ru.delmark.dads.notifications.data.dto.NotificationRecipientChat;
 import ru.delmark.dads.notifications.data.model.Chat;
 
 import java.util.List;
@@ -9,5 +10,5 @@ import java.util.List;
 public interface ChatDAO {
     boolean chatExists(Long id);
     void insertChat(Chat chat);
-    List<Long> getChatIdsForTopicNotificationSend(String topicName);
+    List<NotificationRecipientChat> getRecipientChatsForNotification(String topicName);
 }
